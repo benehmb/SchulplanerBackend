@@ -1,0 +1,5 @@
+#mysql
+flask
+markdown
+flask_restful
+flask_httpauth
