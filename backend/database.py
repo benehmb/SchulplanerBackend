@@ -37,7 +37,8 @@ class Database:
         # Check if Database-Structure exists
         mycursor.execute("SHOW DATABASES LIKE '" + self.database + "'")
 
-        found = {'database': False, 'groups': False, 'homework': False, 'exams': False}
+        found = {'database': False, 'groups': False, 'homework': False, 'exams': False, 'deleted_groups': False,
+                 'deleted_homework': False, 'deleted_exams': False}
         result = mycursor.fetchone()
         if result:
             found['database'] = True
@@ -46,7 +47,7 @@ class Database:
         mydb = self.connect()
         mycursor = mydb.cursor()
 
-        databases = {"groups", "homework", "exams"}
+        databases = {"groups", "homework", "exams", "deleted_groups", "deleted_homework", "deleted_exams"}
         for x in databases:
             mycursor.execute("SHOW TABLES LIKE '%s'" % x)
             results = mycursor.fetchall()
@@ -70,7 +71,32 @@ class Database:
                                                    "NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;")
         if not found['exams']:
             mycursor.execute(
-                "CREATE TABLE `" + self.database + "`.`exams` ( `id` INT(8) NOT NULL AUTO_INCREMENT, `group_id` INT("
+                "CREATE TABLE `" + self.database + "`.`exams` ( `id` INT(8) NOT NULL, `group_id` INT("
+                                                   "8) NOT NULL , `date` INT(10) NOT NULL , `subject` TEXT "
+                                                   "CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL , "
+                                                   "`exam` TEXT CHARACTER SET latin1 COLLATE latin1_german1_ci NOT "
+                                                   "NULL) ENGINE = InnoDB;")
+        if not found['deleted_groups']:
+            mycursor.execute(
+                "CREATE TABLE `" + self.database + "`.deleted_groups ( `id` INT(8) NOT NULL, `name` "
+                                                   "TEXT "
+                                                   "CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL , "
+                                                   "`pass` TEXT "
+                                                   "CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL , "
+                                                   "`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+                                                   ") ENGINE = InnoDB;")
+        if not found['deleted_homework']:
+            mycursor.execute(
+                "CREATE TABLE `" + self.database + "`.`deleted_homework` ( `id` INT(8) NOT NULL, "
+                                                   "`group_id` "
+                                                   "INT(8) NOT NULL , `date` INT(10) NOT NULL , `subject` TEXT "
+                                                   "CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL , "
+                                                   "`homework` TEXT CHARACTER SET latin1 COLLATE latin1_german1_ci "
+                                                   "NOT NULL) ENGINE = InnoDB;")
+        if not found['deleted_exams']:
+            mycursor.execute(
+                "CREATE TABLE `" + self.database + "`.`deleted_exams` ( `id` INT(8) NOT NULL AUTO_INCREMENT, "
+                                                   "`group_id` INT( "
                                                    "8) NOT NULL , `date` INT(10) NOT NULL , `subject` TEXT "
                                                    "CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL , "
                                                    "`exam` TEXT CHARACTER SET latin1 COLLATE latin1_german1_ci NOT "
@@ -159,6 +185,9 @@ class Database:
             mycursor.execute("SELECT * FROM groups WHERE id='%s' AND pass='%s'" % (group_id, password,))
             myresult = mycursor.fetchall()
             if myresult:
+                mycursor.execute("INSERT INTO deleted_groups (id, name, pass, created_at) SELECT id, name, pass, created_at FROM groups WHERE id = '%s'" % group_id)
+                # todo do this for DELETE FROM homework and DELETE FROM exams
+                mydb.commit()
                 sql = "DELETE FROM groups WHERE id = '%s'" % group_id
                 mycursor.execute(sql)
                 mydb.commit()
@@ -626,6 +655,7 @@ if tempObj[1] == 410:
 else:
     print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
     failed = failed + 1
+print("Delete testGroup: %s" % (database.delete_group(groupID, groupPass),))
 
 print(BColors.OKBLUE + "Exam test done" + BColors.ENDC)
 
@@ -759,6 +789,7 @@ if tempObj[1] == 410:
 else:
     print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
     failed = failed + 1
+print("Delete testGroup: %s" % (database.delete_group(groupID, groupPass),))
 
 print(BColors.OKBLUE + "Homework test done" + BColors.ENDC)
 print(
