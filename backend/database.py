@@ -129,85 +129,103 @@ class Database:
         else:
             return False, 404
 
-    # todo check ig group is already deleted
     def change_group_pass(self, group_id, old_password):
         mydb = self.connect()
         mycursor = mydb.cursor()
 
-        mycursor.execute("SELECT * FROM groups WHERE id=%s" % group_id)
+        mycursor.execute("SELECT * FROM deleted_groups WHERE id=%s" % group_id)
         myresult = mycursor.fetchall()
-        if myresult:
-            mycursor.execute("SELECT * FROM groups WHERE id='%s' AND pass='%s'" % (group_id, old_password,))
+        mydb.commit()
+        if myresult.__len__() == 0:
+            mycursor.execute("SELECT * FROM groups WHERE id=%s" % group_id)
             myresult = mycursor.fetchall()
             if myresult:
-                sql = "UPDATE groups SET pass = %s WHERE id = %s;"
-                password = create_pass()
-                val = (password, group_id)
+                mycursor.execute("SELECT * FROM groups WHERE id='%s' AND pass='%s'" % (group_id, old_password,))
+                myresult = mycursor.fetchall()
+                if myresult:
+                    sql = "UPDATE groups SET pass = %s WHERE id = %s;"
+                    password = create_pass()
+                    val = (password, group_id)
 
-                mycursor.execute(sql, val)
-                mydb.commit()
-                return True, 200, password
+                    mycursor.execute(sql, val)
+                    mydb.commit()
+                    return True, 200, password
+                else:
+                    return False, 401
             else:
-                return False, 401
+                return False, 404
         else:
-            return False, 404
+            return False, 410
 
-    # todo check ig group is already deleted
     def change_group_name(self, group_id, name, password):
         mydb = self.connect()
         mycursor = mydb.cursor()
 
-        mycursor.execute("SELECT * FROM groups WHERE id=%s" % group_id)
+        mycursor.execute("SELECT * FROM deleted_groups WHERE id=%s" % group_id)
         myresult = mycursor.fetchall()
-        if myresult:
-            mycursor.execute("SELECT * FROM groups WHERE id='%s' AND pass='%s'" % (group_id, password,))
+        mydb.commit()
+        if myresult.__len__() == 0:
+            mycursor.execute("SELECT * FROM groups WHERE id=%s" % group_id)
             myresult = mycursor.fetchall()
             if myresult:
-                sql = "UPDATE groups SET name = %s WHERE id = %s;"
-                val = (name, group_id)
-                mycursor.execute(sql, val)
-                mydb.commit()
-                return True, 200
+                mycursor.execute("SELECT * FROM groups WHERE id='%s' AND pass='%s'" % (group_id, password,))
+                myresult = mycursor.fetchall()
+                if myresult:
+                    sql = "UPDATE groups SET name = %s WHERE id = %s;"
+                    val = (name, group_id)
+                    mycursor.execute(sql, val)
+                    mydb.commit()
+                    return True, 200
+                else:
+                    return False, 401
             else:
-                return False, 401
+                return False, 404
         else:
-            return False, 404
+            return False, 410
 
-    # todo check ig group is already deleted
     def delete_group(self, group_id, password):
         mydb = self.connect()
         mycursor = mydb.cursor()
 
-        mycursor.execute("SELECT * FROM groups WHERE id=%s" % group_id)
+        mycursor.execute("SELECT * FROM deleted_groups WHERE id=%s" % group_id)
         myresult = mycursor.fetchall()
         mydb.commit()
-        if myresult:
-            mycursor.execute("SELECT * FROM groups WHERE id='%s' AND pass='%s'" % (group_id, password,))
+        if myresult.__len__() == 0:
+            mycursor.execute("SELECT * FROM groups WHERE id=%s" % group_id)
             myresult = mycursor.fetchall()
+            mydb.commit()
             if myresult:
-                mycursor.execute("INSERT INTO deleted_groups (id, name, pass, created_at) SELECT id, name, pass, created_at FROM groups WHERE id = '%s'" % group_id)
-                # todo do this for DELETE FROM homework and DELETE FROM exams
-                mydb.commit()
-                sql = "DELETE FROM groups WHERE id = '%s'" % group_id
-                mycursor.execute(sql)
-                mydb.commit()
-                mycursor.execute("INSERT INTO deleted_exams (id, group_id, date, subject, exam) SELECT id, group_id, date, subject, exam FROM exams WHERE group_id = '%s'" % group_id)
-                # todo test behaving for multiple exams
-                mydb.commit()
-                sql = "DELETE FROM homework WHERE group_id = '%s';" % group_id
-                mycursor.execute(sql)
-                mydb.commit()
-                mycursor.execute("INSERT INTO deleted_homework (id, group_id, date, subject, homework) SELECT id, group_id, date, subject, homework FROM homework WHERE group_id = '%s'" % group_id)
-                # todo test behaving for multiple homework
-                mydb.commit()
-                sql = "DELETE FROM exams WHERE group_id = '%s';" % group_id
-                mycursor.execute(sql)
-                mydb.commit()
-                return True, 204
+                mycursor.execute("SELECT * FROM groups WHERE id='%s' AND pass='%s'" % (group_id, password,))
+                myresult = mycursor.fetchall()
+                if myresult:
+                    mycursor.execute(
+                        "INSERT INTO deleted_groups (id, name, pass, created_at) SELECT "
+                        "id, name, pass, created_at FROM groups WHERE id = '%s'" % group_id)
+                    mydb.commit()
+                    sql = "DELETE FROM groups WHERE id = '%s'" % group_id
+                    mycursor.execute(sql)
+                    mydb.commit()
+                    mycursor.execute(
+                        "INSERT INTO deleted_homework (id, group_id, date, subject, homework) SELECT "
+                        "id, group_id, date, subject, homework FROM homework WHERE group_id = '%s'" % group_id)
+                    mydb.commit()
+                    sql = "DELETE FROM homework WHERE group_id = '%s';" % group_id
+                    mycursor.execute(sql)
+                    mydb.commit()
+                    mycursor.execute(
+                        "INSERT INTO deleted_exams (id, group_id, date, subject, exam) SELECT id, group_id, date, "
+                        "subject, exam FROM exams WHERE group_id = '%s'" % group_id)
+                    mydb.commit()
+                    sql = "DELETE FROM exams WHERE group_id = '%s';" % group_id
+                    mycursor.execute(sql)
+                    mydb.commit()
+                    return True, 204
+                else:
+                    return False, 401
             else:
-                return False, 401
+                return False, 404
         else:
-            return False, 404
+            return False, 410
 
     # Methods:
     # print(get_group_name(1))
@@ -218,7 +236,6 @@ class Database:
     # ---------------------------------------------------Groups end---------------------------------------------------#
 
     # ----------------------------------------------------Homework----------------------------------------------------#
-    # todo make test if group exists and there are homework to return
     def get_homework(self, group_id):
         mydb = self.connect()
         mycursor = mydb.cursor()
@@ -231,7 +248,10 @@ class Database:
             mycursor.execute(sql)
             result = mycursor.fetchall()
             mydb.commit()
-            return True, 200, result
+            if result.__len__() > 0:
+                return True, 200, result
+            else:
+                return False, 204
         else:
             return False, 404
 
@@ -255,7 +275,6 @@ class Database:
         else:
             return False, 404
 
-    # todo make test if homework is deleted
     def delete_homework(self, homework_id, group_id, password):
         mydb = self.connect()
         mycursor = mydb.cursor()
@@ -266,22 +285,34 @@ class Database:
         if myresult:
             mycursor.execute("SELECT * FROM groups WHERE id='%s' AND pass='%s'" % (group_id, password,))
             myresult = mycursor.fetchall()
+            mydb.commit()
             if myresult:
-                mycursor.execute("SELECT * FROM homework WHERE id = %s" % homework_id)
+                mycursor.execute("SELECT * FROM deleted_homework "
+                                 "WHERE id = %s AND group_id = %s" % (homework_id, group_id,))
                 myresult = mycursor.fetchall()
-                if myresult:
-                    sql = "DELETE FROM homework WHERE id = '%s'" % homework_id
-                    mycursor.execute(sql)
+                mydb.commit()
+                if myresult.__len__() == 0:
+                    mycursor.execute("SELECT * FROM homework WHERE id = %s" % homework_id)
+                    myresult = mycursor.fetchall()
                     mydb.commit()
-                    return True, 204
+                    if myresult:
+                        mycursor.execute(
+                            "INSERT INTO deleted_homework (id, group_id, date, subject, homework) SELECT "
+                            "id, group_id, date, subject, homework FROM homework WHERE id = '%s'" % homework_id)
+                        mydb.commit()
+                        sql = "DELETE FROM homework WHERE id = '%s'" % homework_id
+                        mycursor.execute(sql)
+                        mydb.commit()
+                        return True, 204
+                    else:
+                        return False, 404
                 else:
-                    return False, 404
+                    return False, 410
             else:
                 return False, 401
         else:
             return False, 404
 
-    # todo make test if homework is deleted
     def edit_homework(self, homework_id, group_id, date, subject, homework, password):
         mydb = self.connect()
         mycursor = mydb.cursor()
@@ -290,22 +321,30 @@ class Database:
         myresult = mycursor.fetchall()
         mydb.commit()
         if myresult:
-            mycursor.execute("SELECT * FROM groups WHERE id='%s' AND pass='%s'" % (group_id, password,))
+            mycursor.execute("SELECT * FROM deleted_homework "
+                             "WHERE id = %s AND group_id = %s" % (homework_id, group_id,))
             myresult = mycursor.fetchall()
-            if myresult:
-                mycursor.execute("SELECT * FROM homework WHERE id=%s" % homework_id)
+            mydb.commit()
+            if myresult.__len__() == 0:
+                mycursor.execute("SELECT * FROM groups WHERE id='%s' AND pass='%s'" % (group_id, password,))
                 myresult = mycursor.fetchall()
                 mydb.commit()
                 if myresult:
-                    sql = "UPDATE homework SET group_id = %s, date = %s, subject = %s, homework = %s WHERE id = %s;"
-                    val = (group_id, date, subject, homework, homework_id)
-                    mycursor.execute(sql, val)
+                    mycursor.execute("SELECT * FROM homework WHERE id=%s" % homework_id)
+                    myresult = mycursor.fetchall()
                     mydb.commit()
-                    return True, 200
+                    if myresult:
+                        sql = "UPDATE homework SET group_id = %s, date = %s, subject = %s, homework = %s WHERE id = %s;"
+                        val = (group_id, date, subject, homework, homework_id)
+                        mycursor.execute(sql, val)
+                        mydb.commit()
+                        return True, 200
+                    else:
+                        return False, 404
                 else:
-                    return False, 404
+                    return False, 401
             else:
-                return False, 401
+                return False, 410
         else:
             return False, 404
 
@@ -317,9 +356,8 @@ class Database:
 
     # --------------------------------------------------Homework end--------------------------------------------------#
 
-    # ----------------------------------------------------Homework----------------------------------------------------#
+    # ----------------------------------------------------Exams----------------------------------------------------#
 
-    # todo make test if there are exams to return
     def get_exams(self, group_id):
         mydb = self.connect()
         mycursor = mydb.cursor()
@@ -332,7 +370,10 @@ class Database:
             mycursor.execute(sql)
             result = mycursor.fetchall()
             mydb.commit()
-            return True, 200, result
+            if result.__len__() > 0:
+                return True, 200, result
+            else:
+                return False, 204
         else:
             return False, 404
 
@@ -357,7 +398,6 @@ class Database:
         else:
             return False, 404
 
-    # todo make test if exam is deleted
     def delete_exam(self, exam_id, group_id, password):
         mydb = self.connect()
         mycursor = mydb.cursor()
@@ -368,22 +408,34 @@ class Database:
         if myresult:
             mycursor.execute("SELECT * FROM groups WHERE id='%s' AND pass='%s'" % (group_id, password,))
             myresult = mycursor.fetchall()
+            mydb.commit()
             if myresult:
-                mycursor.execute("SELECT * FROM exams WHERE id = %s" % exam_id)
+                mycursor.execute("SELECT * FROM deleted_exams "
+                                 "WHERE id = %s AND group_id = %s" % (exam_id, group_id,))
                 myresult = mycursor.fetchall()
-                if myresult:
-                    sql = "DELETE FROM exams WHERE id = '%s'" % exam_id
-                    mycursor.execute(sql)
+                mydb.commit()
+                if myresult.__len__() == 0:
+                    mycursor.execute("SELECT * FROM exams WHERE id = %s" % exam_id)
+                    myresult = mycursor.fetchall()
                     mydb.commit()
-                    return True, 204
+                    if myresult:
+                        mycursor.execute(
+                            "INSERT INTO deleted_exams (id, group_id, date, subject, exam) SELECT id, group_id, date, "
+                            "subject, exam FROM exams WHERE id = '%s'" % exam_id)
+                        mydb.commit()
+                        sql = "DELETE FROM exams WHERE id = '%s'" % exam_id
+                        mycursor.execute(sql)
+                        mydb.commit()
+                        return True, 204
+                    else:
+                        return False, 404
                 else:
-                    return False, 404
+                    return False, 410
             else:
                 return False, 401
         else:
             return False, 404
 
-    # todo make test if exam is deleted
     def edit_exam(self, exam_id, group_id, date, subject, exam, password):
         mydb = self.connect()
         mycursor = mydb.cursor()
@@ -392,22 +444,30 @@ class Database:
         myresult = mycursor.fetchall()
         mydb.commit()
         if myresult:
-            mycursor.execute("SELECT * FROM exams WHERE id=%s" % exam_id)
+            mycursor.execute("SELECT * FROM deleted_exams "
+                             "WHERE id = %s AND group_id = %s" % (exam_id, group_id,))
             myresult = mycursor.fetchall()
             mydb.commit()
-            if myresult:
+            if myresult.__len__() == 0:
                 mycursor.execute("SELECT * FROM groups WHERE id='%s' AND pass='%s'" % (group_id, password,))
                 myresult = mycursor.fetchall()
+                mydb.commit()
                 if myresult:
-                    sql = "UPDATE exams SET group_id = %s, date = %s, subject = %s, exam = %s WHERE id = %s;"
-                    val = (group_id, date, subject, exam, exam_id)
-                    mycursor.execute(sql, val)
+                    mycursor.execute("SELECT * FROM exams WHERE id=%s" % exam_id)
+                    myresult = mycursor.fetchall()
                     mydb.commit()
-                    return True, 200
+                    if myresult:
+                        sql = "UPDATE exams SET group_id = %s, date = %s, subject = %s, exam = %s WHERE id = %s;"
+                        val = (group_id, date, subject, exam, exam_id)
+                        mycursor.execute(sql, val)
+                        mydb.commit()
+                        return True, 200
+                    else:
+                        return False, 404
                 else:
                     return False, 401
             else:
-                return False, 404
+                return False, 410
         else:
             return False, 404
 
@@ -417,11 +477,10 @@ class Database:
     # print(delete_exam(1, 1, "01234567891012131415"))
     # print(get_exams(1))
 
-    # --------------------------------------------------Homework end--------------------------------------------------#
+    # --------------------------------------------------Exams end--------------------------------------------------#
     # init()
 
 
-# todo check if Password-test works
 # Testing:
 # Console colors and formatting
 class BColors:
@@ -434,374 +493,401 @@ class BColors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+
 def test():
     database = Database()
-    defaultTestGroupName = "Test01"
+    default_test_group_name = "Test01"
     success = 0
     failed = 0
 
     print(BColors.OKBLUE + "Testing groups" + BColors.ENDC)
-    testGroup = database.create_group(defaultTestGroupName)
-    print("Created testGroup: %s" % (testGroup,))
+    test_group = database.create_group(default_test_group_name)
+    print("Created test_group: %s" % (test_group,))
 
     print("Get name:")
-    temp_obj = database.get_group_name(testGroup[2]['group_id'])
-    if temp_obj[2] == defaultTestGroupName:
+    temp_obj = database.get_group_name(test_group[2]['group_id'])
+    if temp_obj[2] == default_test_group_name:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Get wrong name:")
-    temp_obj = database.get_group_name(testGroup[2]['group_id'] + 1)
+    temp_obj = database.get_group_name(test_group[2]['group_id'] + 1)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
 
     print("Change pass: ")
-    temp_obj = database.change_group_pass(testGroup[2]['group_id'], testGroup[2]['password'])
+    temp_obj = database.change_group_pass(test_group[2]['group_id'], test_group[2]['password'])
     newPass = temp_obj[2]
     if temp_obj[1] == 200:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Change wrong pass: ")
-    temp_obj = database.change_group_pass(testGroup[2]['group_id'], testGroup[2]['password'])
+    temp_obj = database.change_group_pass(test_group[2]['group_id'], test_group[2]['password'])
     if temp_obj[1] == 401:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Change wrong group pass: ")
-    temp_obj = database.change_group_pass(testGroup[2]['group_id'] + 1, testGroup[2]['password'])
+    temp_obj = database.change_group_pass(test_group[2]['group_id'] + 1, test_group[2]['password'])
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
 
     print("Delete wrong group: ")
-    temp_obj = database.delete_group(testGroup[2]['group_id'] + 1, testGroup[2]['password'])
+    temp_obj = database.delete_group(test_group[2]['group_id'] + 1, test_group[2]['password'])
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Delete wrong pass: ")
-    temp_obj = database.delete_group(testGroup[2]['group_id'], testGroup[2]['password'])
+    temp_obj = database.delete_group(test_group[2]['group_id'], test_group[2]['password'])
     if temp_obj[1] == 401:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Delete group: ")
-    temp_obj = database.delete_group(testGroup[2]['group_id'], newPass)
+    temp_obj = database.delete_group(test_group[2]['group_id'], newPass)
     if temp_obj[1] == 204:
         print(BColors.OKGREEN + "Success " + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed:" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Delete group again: ")
-    temp_obj = database.delete_group(testGroup[2]['group_id'], newPass)
+    temp_obj = database.delete_group(test_group[2]['group_id'], newPass)
     if temp_obj[1] == 410:
         print(BColors.OKGREEN + "Success " + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed:" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Change pass after deleted: ")
-    temp_obj = database.change_group_pass(testGroup[2]['group_id'], testGroup[2]['password'])
+    temp_obj = database.change_group_pass(test_group[2]['group_id'], test_group[2]['password'])
     if temp_obj[1] == 410:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
+    print("Change name after deleted: ")
+    temp_obj = database.change_group_name(test_group[2]['group_id'], "Hey", test_group[2]['password'])
+    if temp_obj[1] == 410:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success += 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed += 1
 
     print(BColors.OKBLUE + "Groups test done" + BColors.ENDC)
 
     print(BColors.OKBLUE + "Testing exams" + BColors.ENDC)
-    testGroup = database.create_group(defaultTestGroupName)
-    groupID = testGroup[2]['group_id']
-    groupPass = testGroup[2]['password']
-    print("Created testGroup: %s" % (testGroup,))
-
+    test_group = database.create_group(default_test_group_name)
+    groupID = test_group[2]['group_id']
+    groupPass = test_group[2]['password']
+    print("Created test_group: %s" % (test_group,))
+    print("Get exam without adding one first:")
+    temp_obj = database.get_exams(groupID)
+    if temp_obj[1] == 204:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success += 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed += 1
     print("Create testExam with wrong pass:")
     temp_obj = database.add_exam(groupID, 1583770158, "Math", "Test", groupPass + "1")
     if temp_obj[1] == 401:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Create testExam with wrong GroupID:")
     temp_obj = database.add_exam(groupID + 1, 1583770158, "Math", "Test", groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Create testExam:")
     temp_obj = database.add_exam(groupID, 1583770158, "Math", "Test", groupPass)
     if temp_obj[1] == 201:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
 
     print("Getting all testExam for wrong group:")
     temp_obj = database.get_exams(groupID + 1)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Getting all testExam for group:")
     temp_obj = database.get_exams(groupID)
-    if temp_obj[1] == 200 and temp_obj[2][0][1] == groupID and temp_obj[2][0][2] == 1583770158 and temp_obj[2][0][3] == "Math" \
+    if temp_obj[1] == 200 and temp_obj[2][0][1] == groupID and temp_obj[2][0][2] == 1583770158 and temp_obj[2][0][
+        3] == "Math" \
             and temp_obj[2][0][4] == "Test":
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
 
     testExam = temp_obj[2][0]
     print("Edit testExam for wrong group:")
     temp_obj = database.edit_exam(testExam[0], groupID + 1, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Edit wrong testExam:")
     temp_obj = database.edit_exam(testExam[0] + 1, groupID, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Edit testExam for wrong pass:")
     temp_obj = database.edit_exam(testExam[0], groupID, 1583770159, "English", "Test02", groupPass + "1")
     if temp_obj[1] == 401:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Edit testExam:")
     temp_obj = database.edit_exam(testExam[0], groupID, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 200:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
 
     print("Delete testExam for wrong group:")
     temp_obj = database.delete_exam(testExam[0], groupID + 1, groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Delete wrong testExam:")
     temp_obj = database.delete_exam(testExam[0] + 1, groupID, groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Delete testExam for wrong pass:")
     temp_obj = database.delete_exam(testExam[0], groupID, groupPass + "1")
     if temp_obj[1] == 401:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Delete testExam:")
     temp_obj = database.delete_exam(testExam[0], groupID, groupPass)
     if temp_obj[1] == 204:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Delete testExam again:")
     temp_obj = database.delete_exam(testExam[0], groupID, groupPass)
     if temp_obj[1] == 410:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Edit testExam after deleted:")
     temp_obj = database.edit_exam(testExam[0], groupID, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 410:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
-    print("Delete testGroup: %s" % (database.delete_group(groupID, groupPass),))
+        failed += 1
+    print("Delete test_group: %s" % (database.delete_group(groupID, groupPass),))
 
     print(BColors.OKBLUE + "Exam test done" + BColors.ENDC)
 
     print(BColors.OKBLUE + "Testing homework" + BColors.ENDC)
-    testGroup = database.create_group(defaultTestGroupName)
-    groupID = testGroup[2]['group_id']
-    groupPass = testGroup[2]['password']
-    print("Created testGroup: %s" % (testGroup,))
-
+    test_group = database.create_group(default_test_group_name)
+    groupID = test_group[2]['group_id']
+    groupPass = test_group[2]['password']
+    print("Created test_group: %s" % (test_group,))
+    print("Get homework without adding one first:")
+    temp_obj = database.get_homework(groupID)
+    if temp_obj[1] == 204:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success += 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed += 1
     print("Create testHomework with wrong pass:")
     temp_obj = database.add_homework(groupID, 1583770158, "Math", "Test", groupPass + "1")
     if temp_obj[1] == 401:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Create testHomework with wrong GroupID:")
     temp_obj = database.add_homework(groupID + 1, 1583770158, "Math", "Test", groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Create testHomework:")
     temp_obj = database.add_homework(groupID, 1583770158, "Math", "Test", groupPass)
     if temp_obj[1] == 201:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
 
     print("Getting all testHomework for wrong group:")
     temp_obj = database.get_homework(groupID + 1)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
     print("Getting all testHomework for group:")
     temp_obj = database.get_homework(groupID)
-    if temp_obj[1] == 200 and temp_obj[2][0][1] == groupID and temp_obj[2][0][2] == 1583770158 and temp_obj[2][0][3] == "Math" \
+    if temp_obj[1] == 200 and temp_obj[2][0][1] == groupID and temp_obj[2][0][2] == 1583770158 and temp_obj[2][0][
+        3] == "Math" \
             and temp_obj[2][0][4] == "Test":
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
 
     testHomework = temp_obj[2][0]
     print("Edit testHomework for wrong group:")
     temp_obj = database.edit_homework(testHomework[0], groupID + 1, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Edit wrong testHomework:")
     temp_obj = database.edit_homework(testHomework[0] + 1, groupID, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Edit testHomework for wrong pass:")
     temp_obj = database.edit_homework(testHomework[0], groupID, 1583770159, "English", "Test02", groupPass + "1")
     if temp_obj[1] == 401:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Edit testHomework:")
     temp_obj = database.edit_homework(testHomework[0], groupID, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 200:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
 
     print("Delete testHomework for wrong group:")
     temp_obj = database.delete_homework(testHomework[0], groupID + 1, groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Delete wrong testHomework:")
     temp_obj = database.delete_homework(testHomework[0] + 1, groupID, groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Delete testHomework for wrong pass:")
     temp_obj = database.delete_homework(testHomework[0], groupID, groupPass + "1")
     if temp_obj[1] == 401:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Delete testHomework:")
     temp_obj = database.delete_homework(testHomework[0], groupID, groupPass)
     if temp_obj[1] == 204:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Delete testHomework again:")
     temp_obj = database.delete_homework(testHomework[0], groupID, groupPass)
     if temp_obj[1] == 410:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
+        failed += 1
     print("Edit testHomework after deleted:")
     temp_obj = database.edit_homework(testHomework[0], groupID, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 410:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
-        success = success + 1
+        success += 1
     else:
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
-        failed = failed + 1
-    print("Delete testGroup: %s" % (database.delete_group(groupID, groupPass),))
+        failed += 1
+    print("Delete test_group: %s" % (database.delete_group(groupID, groupPass),))
 
     print(BColors.OKBLUE + "Homework test done" + BColors.ENDC)
     print(
         BColors.OKBLUE + BColors.BOLD + "All Tests done! " + BColors.ENDC +
-        BColors.WARNING + "Success:", success,  "Failed:", failed, "Successrate:",
+        BColors.WARNING + "Success:", success, "Failed:", failed, "Successrate:",
         (success / (success + failed) * 100), "%")
 
+
 # todo test sql-injections
-test()
+# todo check if tests are complete (should be 46)
+# test()

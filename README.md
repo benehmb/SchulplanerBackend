@@ -11,31 +11,36 @@
     "homework": String
 }
 ```
- ### GET /groups/{group_id}/homework
+
+### GET /groups/{group_id}/homework
 
  Return all homework for {group_id}
+ 
   - 200 -> Ok
   - 204 -> No homework to return
   - 404 -> Group not found
   
-  ### POST /groups/{group_id}/homework
+### POST /groups/{group_id}/homework
 
   Create and return a new homework according to the request body
+  
   - 201 -> Created
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group not found
  
- ### DELETE /groups/{group_id}/homework/{homework_id}
+### DELETE /groups/{group_id}/homework/{homework_id}
 
   Delete {homework_id} under {group_id}
+  
   - 204 -> No content anymore, homework successfully deleted
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group or homework not found
   - 410 -> Gone, homework is already deleted
   
-  ### PUT /groups/{group_id}/homework/{homework_id}
+### PUT /groups/{group_id}/homework/{homework_id}
 
   Update {homework_id} under {group_id} according to request body
+  
   - 200 -> Ok
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group or homework not found
@@ -53,16 +58,19 @@
     "exam": String
 }
 ```
-  ### GET /groups/{group_id}/exams
+
+### GET /groups/{group_id}/exams
 
   Return all exams for {group_id}
+  
   - 200 -> Ok
   - 204 -> No exam to return
   - 404 -> Group not found
 
-  ### POST /groups/{group_id}/exams
+### POST /groups/{group_id}/exams
 
   Create and return a new exam according to the request body
+  
   - 201 -> Created
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group not found
@@ -70,6 +78,7 @@
 ### DELETE /groups/{group_id}/exams/{exam_id}
 
   Delete {exam_id} under {group_id}
+  
   - 204 -> No content anymore, exam successfully deleted
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group or exam not found
@@ -78,6 +87,7 @@
 ### PUT /groups/{group_id}/exams/{exam_id}
 
   Update {exam_id} under {group_id} according to request body
+  
   - 200 -> Ok
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group or exam not found
@@ -92,20 +102,24 @@
     "name": String
 }
 ```
+
 ### GET /groups/{group_id}
 
   Return info for {group_id}
+  
   - 200 -> Ok
   - 404 -> Group not found
 
 ### POST /groups
 
   Create and return group according to the request body
+  
   - 201 -> Created
 
 ### DELETE /groups/{group_id}
 
   Delete {group_id}
+  
   - 204 -> No content anymore, group successfully deleted
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group not found
@@ -114,6 +128,7 @@
 ### PUT /groups/{group_id}
 
   Update {group_id} according to request body (without body, returns new Password, with body, sets new name)
+  
   - 200 -> Ok
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group not found
@@ -133,6 +148,7 @@
   - ```create_group(name):{boolean(worked), integer(statuscode), {"group_id": group_id, "password": password}}```
   - ```change_group_pass(group_id, old_password):{boolean(worled), integer(statuscode), string(Password; only returned if worked=true)}```
   - ```delete_group(group_id, password):{boolean(worked), integer(statuscode)}```
+  - ```change_group_name(group_id, name, password):{boolean(worked), integer(statuscode)}```
 
 ### Homework
 

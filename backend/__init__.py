@@ -3,8 +3,8 @@ import os
 import shelve
 
 # Import the framework
-from flask import Flask, g
-from flask_restful import Resource, Api, reqparse
+from flask import Flask, request
+from flask_restful import Resource, Api
 from .database import *
 
 # Create an instance of Flask
@@ -13,18 +13,14 @@ app = Flask(__name__)
 # Create the API
 api = Api(app)
 
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = shelve.open("devices.db")
-    return db
+database = Database()
 
 
-@app.teardown_appcontext
-def teardown_db(exception):
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
+# @app.teardown_appcontext
+# def teardown_db(exception):
+#     db = getattr(g, '_database', None)
+#     if db is not None:
+#         db.close()
 
 
 @app.route("/")
@@ -40,6 +36,9 @@ def index():
         return markdown.markdown(content)
 
 
-class Homework(Resource):
-    def get(self):
-        return
+class homework(Resource):
+    def get(self, todo_id):
+        return {todo_id}
+
+
+app.add_resource(homework, '/homework/<string:todo_id>')
