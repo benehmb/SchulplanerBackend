@@ -71,11 +71,11 @@ class Database:
                                                    "NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;")
         if not found['exams']:
             mycursor.execute(
-                "CREATE TABLE `" + self.database + "`.`exams` ( `id` INT(8) NOT NULL, `group_id` INT("
+                "CREATE TABLE `" + self.database + "`.`exams` ( `id` INT(8) NOT NULL AUTO_INCREMENT, `group_id` INT("
                                                    "8) NOT NULL , `date` INT(10) NOT NULL , `subject` TEXT "
                                                    "CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL , "
                                                    "`exam` TEXT CHARACTER SET latin1 COLLATE latin1_german1_ci NOT "
-                                                   "NULL) ENGINE = InnoDB;")
+                                                   "NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB;")
         if not found['deleted_groups']:
             mycursor.execute(
                 "CREATE TABLE `" + self.database + "`.deleted_groups ( `id` INT(8) NOT NULL, `name` "
@@ -95,12 +95,12 @@ class Database:
                                                    "NOT NULL) ENGINE = InnoDB;")
         if not found['deleted_exams']:
             mycursor.execute(
-                "CREATE TABLE `" + self.database + "`.`deleted_exams` ( `id` INT(8) NOT NULL AUTO_INCREMENT, "
+                "CREATE TABLE `" + self.database + "`.`deleted_exams` ( `id` INT(8) NOT NULL, "
                                                    "`group_id` INT( "
                                                    "8) NOT NULL , `date` INT(10) NOT NULL , `subject` TEXT "
                                                    "CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL , "
                                                    "`exam` TEXT CHARACTER SET latin1 COLLATE latin1_german1_ci NOT "
-                                                   "NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;")
+                                                   "NULL) ENGINE = InnoDB;")
         return
 
     # --------------------------------------------------Initiate end--------------------------------------------------#
@@ -191,8 +191,14 @@ class Database:
                 sql = "DELETE FROM groups WHERE id = '%s'" % group_id
                 mycursor.execute(sql)
                 mydb.commit()
+                mycursor.execute("INSERT INTO deleted_exams (id, group_id, date, subject, exam) SELECT id, group_id, date, subject, exam FROM exams WHERE group_id = '%s'" % group_id)
+                # todo test behaving for multiple exams
+                mydb.commit()
                 sql = "DELETE FROM homework WHERE group_id = '%s';" % group_id
                 mycursor.execute(sql)
+                mydb.commit()
+                mycursor.execute("INSERT INTO deleted_homework (id, group_id, date, subject, homework) SELECT id, group_id, date, subject, homework FROM homework WHERE group_id = '%s'" % group_id)
+                # todo test behaving for multiple homework
                 mydb.commit()
                 sql = "DELETE FROM exams WHERE group_id = '%s';" % group_id
                 mycursor.execute(sql)
@@ -428,373 +434,374 @@ class BColors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+def test():
+    database = Database()
+    defaultTestGroupName = "Test01"
+    success = 0
+    failed = 0
 
-database = Database()
-defaultTestGroupName = "Test01"
-success = 0
-failed = 0
+    print(BColors.OKBLUE + "Testing groups" + BColors.ENDC)
+    testGroup = database.create_group(defaultTestGroupName)
+    print("Created testGroup: %s" % (testGroup,))
 
-print(BColors.OKBLUE + "Testing groups" + BColors.ENDC)
-testGroup = database.create_group(defaultTestGroupName)
-print("Created testGroup: %s" % (testGroup,))
+    print("Get name:")
+    temp_obj = database.get_group_name(testGroup[2]['group_id'])
+    if temp_obj[2] == defaultTestGroupName:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Get wrong name:")
+    temp_obj = database.get_group_name(testGroup[2]['group_id'] + 1)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
 
-print("Get name:")
-tempObj = database.get_group_name(testGroup[2]['group_id'])
-if tempObj[2] == defaultTestGroupName:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Get wrong name:")
-tempObj = database.get_group_name(testGroup[2]['group_id'] + 1)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
+    print("Change pass: ")
+    temp_obj = database.change_group_pass(testGroup[2]['group_id'], testGroup[2]['password'])
+    newPass = temp_obj[2]
+    if temp_obj[1] == 200:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Change wrong pass: ")
+    temp_obj = database.change_group_pass(testGroup[2]['group_id'], testGroup[2]['password'])
+    if temp_obj[1] == 401:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Change wrong group pass: ")
+    temp_obj = database.change_group_pass(testGroup[2]['group_id'] + 1, testGroup[2]['password'])
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
 
-print("Change pass: ")
-tempObj = database.change_group_pass(testGroup[2]['group_id'], testGroup[2]['password'])
-newPass = tempObj[2]
-if tempObj[1] == 200:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Change wrong pass: ")
-tempObj = database.change_group_pass(testGroup[2]['group_id'], testGroup[2]['password'])
-if tempObj[1] == 401:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Change wrong group pass: ")
-tempObj = database.change_group_pass(testGroup[2]['group_id'] + 1, testGroup[2]['password'])
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
+    print("Delete wrong group: ")
+    temp_obj = database.delete_group(testGroup[2]['group_id'] + 1, testGroup[2]['password'])
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete wrong pass: ")
+    temp_obj = database.delete_group(testGroup[2]['group_id'], testGroup[2]['password'])
+    if temp_obj[1] == 401:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete group: ")
+    temp_obj = database.delete_group(testGroup[2]['group_id'], newPass)
+    if temp_obj[1] == 204:
+        print(BColors.OKGREEN + "Success " + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed:" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete group again: ")
+    temp_obj = database.delete_group(testGroup[2]['group_id'], newPass)
+    if temp_obj[1] == 410:
+        print(BColors.OKGREEN + "Success " + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed:" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Change pass after deleted: ")
+    temp_obj = database.change_group_pass(testGroup[2]['group_id'], testGroup[2]['password'])
+    if temp_obj[1] == 410:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
 
-print("Delete wrong group: ")
-tempObj = database.delete_group(testGroup[2]['group_id'] + 1, testGroup[2]['password'])
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete wrong pass: ")
-tempObj = database.delete_group(testGroup[2]['group_id'], testGroup[2]['password'])
-if tempObj[1] == 401:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete group: ")
-tempObj = database.delete_group(testGroup[2]['group_id'], newPass)
-if tempObj[1] == 204:
-    print(BColors.OKGREEN + "Success " + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed:" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete group again: ")
-tempObj = database.delete_group(testGroup[2]['group_id'], newPass)
-if tempObj[1] == 410:
-    print(BColors.OKGREEN + "Success " + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed:" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Change pass after deleted: ")
-tempObj = database.change_group_pass(testGroup[2]['group_id'], testGroup[2]['password'])
-if tempObj[1] == 410:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
+    print(BColors.OKBLUE + "Groups test done" + BColors.ENDC)
 
-print(BColors.OKBLUE + "Groups test done" + BColors.ENDC)
+    print(BColors.OKBLUE + "Testing exams" + BColors.ENDC)
+    testGroup = database.create_group(defaultTestGroupName)
+    groupID = testGroup[2]['group_id']
+    groupPass = testGroup[2]['password']
+    print("Created testGroup: %s" % (testGroup,))
 
-print(BColors.OKBLUE + "Testing exams" + BColors.ENDC)
-testGroup = database.create_group(defaultTestGroupName)
-groupID = testGroup[2]['group_id']
-groupPass = testGroup[2]['password']
-print("Created testGroup: %s" % (testGroup,))
+    print("Create testExam with wrong pass:")
+    temp_obj = database.add_exam(groupID, 1583770158, "Math", "Test", groupPass + "1")
+    if temp_obj[1] == 401:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Create testExam with wrong GroupID:")
+    temp_obj = database.add_exam(groupID + 1, 1583770158, "Math", "Test", groupPass)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Create testExam:")
+    temp_obj = database.add_exam(groupID, 1583770158, "Math", "Test", groupPass)
+    if temp_obj[1] == 201:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
 
-print("Create testExam with wrong pass:")
-tempObj = database.add_exam(groupID, 1583770158, "Math", "Test", groupPass + "1")
-if tempObj[1] == 401:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Create testExam with wrong GroupID:")
-tempObj = database.add_exam(groupID + 1, 1583770158, "Math", "Test", groupPass)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Create testExam:")
-tempObj = database.add_exam(groupID, 1583770158, "Math", "Test", groupPass)
-if tempObj[1] == 201:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
+    print("Getting all testExam for wrong group:")
+    temp_obj = database.get_exams(groupID + 1)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Getting all testExam for group:")
+    temp_obj = database.get_exams(groupID)
+    if temp_obj[1] == 200 and temp_obj[2][0][1] == groupID and temp_obj[2][0][2] == 1583770158 and temp_obj[2][0][3] == "Math" \
+            and temp_obj[2][0][4] == "Test":
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
 
-print("Getting all testExam for wrong group:")
-tempObj = database.get_exams(groupID + 1)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Getting all testExam for group:")
-tempObj = database.get_exams(groupID)
-if tempObj[1] == 200 and tempObj[2][0][1] == groupID and tempObj[2][0][2] == 1583770158 and tempObj[2][0][3] == "Math" \
-        and tempObj[2][0][4] == "Test":
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
+    testExam = temp_obj[2][0]
+    print("Edit testExam for wrong group:")
+    temp_obj = database.edit_exam(testExam[0], groupID + 1, 1583770159, "English", "Test02", groupPass)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Edit wrong testExam:")
+    temp_obj = database.edit_exam(testExam[0] + 1, groupID, 1583770159, "English", "Test02", groupPass)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Edit testExam for wrong pass:")
+    temp_obj = database.edit_exam(testExam[0], groupID, 1583770159, "English", "Test02", groupPass + "1")
+    if temp_obj[1] == 401:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Edit testExam:")
+    temp_obj = database.edit_exam(testExam[0], groupID, 1583770159, "English", "Test02", groupPass)
+    if temp_obj[1] == 200:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
 
-testExam = tempObj[2][0]
-print("Edit testExam for wrong group:")
-tempObj = database.edit_exam(testExam[0], groupID + 1, 1583770159, "English", "Test02", groupPass)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Edit wrong testExam:")
-tempObj = database.edit_exam(testExam[0] + 1, groupID, 1583770159, "English", "Test02", groupPass)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Edit testExam for wrong pass:")
-tempObj = database.edit_exam(testExam[0], groupID, 1583770159, "English", "Test02", groupPass + "1")
-if tempObj[1] == 401:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Edit testExam:")
-tempObj = database.edit_exam(testExam[0], groupID, 1583770159, "English", "Test02", groupPass)
-if tempObj[1] == 200:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
+    print("Delete testExam for wrong group:")
+    temp_obj = database.delete_exam(testExam[0], groupID + 1, groupPass)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete wrong testExam:")
+    temp_obj = database.delete_exam(testExam[0] + 1, groupID, groupPass)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete testExam for wrong pass:")
+    temp_obj = database.delete_exam(testExam[0], groupID, groupPass + "1")
+    if temp_obj[1] == 401:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete testExam:")
+    temp_obj = database.delete_exam(testExam[0], groupID, groupPass)
+    if temp_obj[1] == 204:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete testExam again:")
+    temp_obj = database.delete_exam(testExam[0], groupID, groupPass)
+    if temp_obj[1] == 410:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Edit testExam after deleted:")
+    temp_obj = database.edit_exam(testExam[0], groupID, 1583770159, "English", "Test02", groupPass)
+    if temp_obj[1] == 410:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete testGroup: %s" % (database.delete_group(groupID, groupPass),))
 
-print("Delete testExam for wrong group:")
-tempObj = database.delete_exam(testExam[0], groupID + 1, groupPass)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete wrong testExam:")
-tempObj = database.delete_exam(testExam[0] + 1, groupID, groupPass)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete testExam for wrong pass:")
-tempObj = database.delete_exam(testExam[0], groupID, groupPass + "1")
-if tempObj[1] == 401:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete testExam:")
-tempObj = database.delete_exam(testExam[0], groupID, groupPass)
-if tempObj[1] == 204:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete testExam again:")
-tempObj = database.delete_exam(testExam[0], groupID, groupPass)
-if tempObj[1] == 410:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Edit testExam after deleted:")
-tempObj = database.edit_exam(testExam[0], groupID, 1583770159, "English", "Test02", groupPass)
-if tempObj[1] == 410:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete testGroup: %s" % (database.delete_group(groupID, groupPass),))
+    print(BColors.OKBLUE + "Exam test done" + BColors.ENDC)
 
-print(BColors.OKBLUE + "Exam test done" + BColors.ENDC)
+    print(BColors.OKBLUE + "Testing homework" + BColors.ENDC)
+    testGroup = database.create_group(defaultTestGroupName)
+    groupID = testGroup[2]['group_id']
+    groupPass = testGroup[2]['password']
+    print("Created testGroup: %s" % (testGroup,))
 
-print(BColors.OKBLUE + "Testing homework" + BColors.ENDC)
-testGroup = database.create_group(defaultTestGroupName)
-groupID = testGroup[2]['group_id']
-groupPass = testGroup[2]['password']
-print("Created testGroup: %s" % (testGroup,))
+    print("Create testHomework with wrong pass:")
+    temp_obj = database.add_homework(groupID, 1583770158, "Math", "Test", groupPass + "1")
+    if temp_obj[1] == 401:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Create testHomework with wrong GroupID:")
+    temp_obj = database.add_homework(groupID + 1, 1583770158, "Math", "Test", groupPass)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Create testHomework:")
+    temp_obj = database.add_homework(groupID, 1583770158, "Math", "Test", groupPass)
+    if temp_obj[1] == 201:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
 
-print("Create testHomework with wrong pass:")
-tempObj = database.add_homework(groupID, 1583770158, "Math", "Test", groupPass + "1")
-if tempObj[1] == 401:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Create testHomework with wrong GroupID:")
-tempObj = database.add_homework(groupID + 1, 1583770158, "Math", "Test", groupPass)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Create testHomework:")
-tempObj = database.add_homework(groupID, 1583770158, "Math", "Test", groupPass)
-if tempObj[1] == 201:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
+    print("Getting all testHomework for wrong group:")
+    temp_obj = database.get_homework(groupID + 1)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+    print("Getting all testHomework for group:")
+    temp_obj = database.get_homework(groupID)
+    if temp_obj[1] == 200 and temp_obj[2][0][1] == groupID and temp_obj[2][0][2] == 1583770158 and temp_obj[2][0][3] == "Math" \
+            and temp_obj[2][0][4] == "Test":
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
 
-print("Getting all testHomework for wrong group:")
-tempObj = database.get_homework(groupID + 1)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-print("Getting all testHomework for group:")
-tempObj = database.get_homework(groupID)
-if tempObj[1] == 200 and tempObj[2][0][1] == groupID and tempObj[2][0][2] == 1583770158 and tempObj[2][0][3] == "Math" \
-        and tempObj[2][0][4] == "Test":
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
+    testHomework = temp_obj[2][0]
+    print("Edit testHomework for wrong group:")
+    temp_obj = database.edit_homework(testHomework[0], groupID + 1, 1583770159, "English", "Test02", groupPass)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Edit wrong testHomework:")
+    temp_obj = database.edit_homework(testHomework[0] + 1, groupID, 1583770159, "English", "Test02", groupPass)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Edit testHomework for wrong pass:")
+    temp_obj = database.edit_homework(testHomework[0], groupID, 1583770159, "English", "Test02", groupPass + "1")
+    if temp_obj[1] == 401:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Edit testHomework:")
+    temp_obj = database.edit_homework(testHomework[0], groupID, 1583770159, "English", "Test02", groupPass)
+    if temp_obj[1] == 200:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
 
-testHomework = tempObj[2][0]
-print("Edit testHomework for wrong group:")
-tempObj = database.edit_homework(testHomework[0], groupID + 1, 1583770159, "English", "Test02", groupPass)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Edit wrong testHomework:")
-tempObj = database.edit_homework(testHomework[0] + 1, groupID, 1583770159, "English", "Test02", groupPass)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Edit testHomework for wrong pass:")
-tempObj = database.edit_homework(testHomework[0], groupID, 1583770159, "English", "Test02", groupPass + "1")
-if tempObj[1] == 401:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Edit testHomework:")
-tempObj = database.edit_homework(testHomework[0], groupID, 1583770159, "English", "Test02", groupPass)
-if tempObj[1] == 200:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
+    print("Delete testHomework for wrong group:")
+    temp_obj = database.delete_homework(testHomework[0], groupID + 1, groupPass)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete wrong testHomework:")
+    temp_obj = database.delete_homework(testHomework[0] + 1, groupID, groupPass)
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete testHomework for wrong pass:")
+    temp_obj = database.delete_homework(testHomework[0], groupID, groupPass + "1")
+    if temp_obj[1] == 401:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete testHomework:")
+    temp_obj = database.delete_homework(testHomework[0], groupID, groupPass)
+    if temp_obj[1] == 204:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete testHomework again:")
+    temp_obj = database.delete_homework(testHomework[0], groupID, groupPass)
+    if temp_obj[1] == 410:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Edit testHomework after deleted:")
+    temp_obj = database.edit_homework(testHomework[0], groupID, 1583770159, "English", "Test02", groupPass)
+    if temp_obj[1] == 410:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success = success + 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed = failed + 1
+    print("Delete testGroup: %s" % (database.delete_group(groupID, groupPass),))
 
-print("Delete testHomework for wrong group:")
-tempObj = database.delete_homework(testHomework[0], groupID + 1, groupPass)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete wrong testHomework:")
-tempObj = database.delete_homework(testHomework[0] + 1, groupID, groupPass)
-if tempObj[1] == 404:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete testHomework for wrong pass:")
-tempObj = database.delete_homework(testHomework[0], groupID, groupPass + "1")
-if tempObj[1] == 401:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete testHomework:")
-tempObj = database.delete_homework(testHomework[0], groupID, groupPass)
-if tempObj[1] == 204:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete testHomework again:")
-tempObj = database.delete_homework(testHomework[0], groupID, groupPass)
-if tempObj[1] == 410:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Edit testHomework after deleted:")
-tempObj = database.edit_homework(testHomework[0], groupID, 1583770159, "English", "Test02", groupPass)
-if tempObj[1] == 410:
-    print(BColors.OKGREEN + "Success" + BColors.ENDC, tempObj)
-    success = success + 1
-else:
-    print(BColors.FAIL + "Failed" + BColors.ENDC, tempObj)
-    failed = failed + 1
-print("Delete testGroup: %s" % (database.delete_group(groupID, groupPass),))
-
-print(BColors.OKBLUE + "Homework test done" + BColors.ENDC)
-print(
-    BColors.OKBLUE + BColors.BOLD + "All Tests done! " + BColors.ENDC +
-    BColors.WARNING + "Success:", success,  "Failed:", failed, "Successrate:",
-    (success / (success + failed) * 100), "%")
+    print(BColors.OKBLUE + "Homework test done" + BColors.ENDC)
+    print(
+        BColors.OKBLUE + BColors.BOLD + "All Tests done! " + BColors.ENDC +
+        BColors.WARNING + "Success:", success,  "Failed:", failed, "Successrate:",
+        (success / (success + failed) * 100), "%")
 
 # todo test sql-injections
+test()
