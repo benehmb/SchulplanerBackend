@@ -16,13 +16,6 @@ api = Api(app)
 database = Database()
 
 
-# @app.teardown_appcontext
-# def teardown_db(exception):
-#     db = getattr(g, '_database', None)
-#     if db is not None:
-#         db.close()
-
-
 @app.route("/")
 def index():
     """Present some documentation"""
@@ -34,11 +27,3 @@ def index():
 
         # Convert to HTML
         return markdown.markdown(content)
-
-
-class homework(Resource):
-    def get(self, todo_id):
-        return {todo_id}
-
-
-app.add_resource(homework, '/homework/<string:todo_id>')
