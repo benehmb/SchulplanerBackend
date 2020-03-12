@@ -61,19 +61,60 @@ class Homework2(Resource):
 class Exams1(Resource):
 
     def get(self, group_id):
-        return
+        try:
+            group_id = int(group_id)
+        except ValueError:
+            return 400, 400
+        values = database.get_exams(group_id)
+        if values[0]:
+            return values[2], values[1]
+        else:
+            return values[1], values[1]
 
     def post(self, group_id):
-        return
+        try:
+            group_id = int(group_id)
+        except ValueError:
+            return 400, 400
+        parser.add_argument('Authorization', location='headers')
+        parser.add_argument('date')
+        parser.add_argument('subject')
+        parser.add_argument('exam')
+        args = parser.parse_args()
+        password = decode_password(args['Authorization'])
+        values = database.add_exam(group_id=group_id, date=args['date'], subject=args['subject'], exam=args['exam'],
+                          password=password)
+        return values[1], values[1]
 
 
 class Exams2(Resource):
 
     def delete(self, group_id, exam_id):
-        return
+        try:
+            group_id = int(group_id)
+            exam_id = int(exam_id)
+        except ValueError:
+            return 400, 400
+        parser.add_argument('Authorization', location='headers')
+        args = parser.parse_args()
+        password = decode_password(args['Authorization'])
+        values = database.delete_exam(exam_id=exam_id, group_id=group_id, password=password)
+        return values[1], values[1]
 
     def put(self, group_id, exam_id):
-        return
+        try:
+            group_id = int(group_id)
+            exam_id = int(exam_id)
+        except ValueError:
+            return 400, 400
+        parser.add_argument('Authorization', location='headers')
+        parser.add_argument('date')
+        parser.add_argument('subject')
+        parser.add_argument('exam')
+        args = parser.parse_args()
+        password = decode_password(args['Authorization'])
+        values = database.edit_exam(exam_id=exam_id, group_id=group_id, date= args['date'], subject=args['suject'], password=password)
+        return values[1], values[1]
 
 
 class Groups1(Resource):
@@ -83,7 +124,7 @@ class Groups1(Resource):
         args = parser.parse_args()
         if args['name']:
             group_name = args['name']
-            values = database.create_group(group_name)
+            values = database.create_group(group_name=group_name)
             return values[2], values[1]
         else:
             return 400, 400
@@ -96,7 +137,7 @@ class Groups2(Resource):
             group_id = int(group_id)
         except ValueError:
             return 400, 400
-        values = database.get_group_name(group_id)
+        values = database.get_group_name(group_id=group_id)
         if values[0]:
             return values[2], values[1]
         else:
@@ -110,7 +151,7 @@ class Groups2(Resource):
             group_id = int(group_id)
         except ValueError:
             return 400, 400
-        values = database.delete_group(group_id, password)
+        values = database.delete_group(group_id=group_id, password=password)
         return values[1], values[1]
 
     def put(self, group_id):
@@ -123,10 +164,10 @@ class Groups2(Resource):
         except ValueError:
             return 400, 400
         if args['name']:
-            values = database.change_group_name(group_id, args['name'], password)
+            values = database.change_group_name(group_id=group_id, name=args['name'], password=password)
             return values[1], values[1]
         else:
-            values = database.change_group_pass(group_id, password)
+            values = database.change_group_pass(group_id=group_id, old_password=password)
             if values[0]:
                 return values[2], values[1]
             else:
