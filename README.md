@@ -18,6 +18,7 @@
  
   - 200 -> Ok
   - 204 -> No homework to return
+  - 400 -> Bad request (Group_id is String or something else)
   - 404 -> Group not found
   
 ### POST /groups/{group_id}/homework
@@ -26,6 +27,7 @@
   
   - 201 -> Created
   - 401 -> Unauthorized: missing or wrong password
+  - 400 -> Bad request (Group_id is String or something else)
   - 404 -> Group not found
  
 ### DELETE /groups/{group_id}/homework/{homework_id}
@@ -33,6 +35,7 @@
   Delete {homework_id} under {group_id}
   
   - 204 -> No content anymore, homework successfully deleted
+  - 400 -> Bad request (Group_id is String or Something else)
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group or homework not found
   - 410 -> Gone, homework is already deleted
@@ -42,6 +45,7 @@
   Update {homework_id} under {group_id} according to request body
   
   - 200 -> Ok
+  - 400 -> Bad request (Group_id is String or Something else)
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group or homework not found
   - 410 -> Gone, homework was deleted
@@ -65,6 +69,7 @@
   
   - 200 -> Ok
   - 204 -> No exam to return
+  - 400 -> Bad request (Group_id is String or Something else)
   - 404 -> Group not found
 
 ### POST /groups/{group_id}/exams
@@ -72,6 +77,7 @@
   Create and return a new exam according to the request body
   
   - 201 -> Created
+  - 400 -> Bad request (Group_id is String or Something else)
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group not found
 
@@ -80,6 +86,7 @@
   Delete {exam_id} under {group_id}
   
   - 204 -> No content anymore, exam successfully deleted
+  - 400 -> Bad request (Group_id is String or Something else)
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group or exam not found
   - 410 -> Gone, exam is already deleted
@@ -89,6 +96,7 @@
   Update {exam_id} under {group_id} according to request body
   
   - 200 -> Ok
+  - 400 -> Bad request (Group_id is String or Something else)
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group or exam not found
   - 410 -> Gone, exam was deleted
@@ -108,6 +116,7 @@
   Return info for {group_id}
   
   - 200 -> Ok
+  - 400 -> Bad request (Group_id is String or Something else)
   - 404 -> Group not found
 
 ### POST /groups
@@ -115,12 +124,14 @@
   Create and return group according to the request body
   
   - 201 -> Created
+  - 400 -> Bad request (Group_id is String or Something else)
 
 ### DELETE /groups/{group_id}
 
   Delete {group_id}
   
   - 204 -> No content anymore, group successfully deleted
+  - 400 -> Bad request (Group_id is String or Something else)
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group not found
   - 410 -> Gone, group is already deleted
@@ -130,6 +141,7 @@
   Update {group_id} according to request body (without body, returns new Password, with body, sets new name)
   
   - 200 -> Ok
+  - 400 -> Bad request (Group_id is String or Something else)
   - 401 -> Unauthorized: missing or wrong password
   - 404 -> Group not found
   - 410 -> Gone, group was deleted
