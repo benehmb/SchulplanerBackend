@@ -16,7 +16,6 @@ api = Api(app)
 # Create the Parser
 parser = reqparse.RequestParser()
 
-
 # Create Database-connection
 database = Database()
 
@@ -24,8 +23,9 @@ database = Database()
 def decode_password(password):
     password = b64decode((password[6:len(password)]))
     password = password.decode("utf-8")
-    password = password[password.find(':')+1:len(password)]
+    password = password[password.find(':') + 1:len(password)]
     return password
+
 
 @app.route("/")
 def index():
@@ -40,24 +40,69 @@ def index():
         return markdown.markdown(content)
 
 
+# noinspection PyMethodMayBeStatic
 class Homework1(Resource):
 
     def get(self, group_id):
-        return
+        try:
+            group_id = int(group_id)
+        except ValueError:
+            return 400, 400
+        values = database.get_homework(group_id)
+        if values[0]:
+            return values[2], values[1]
+        else:
+            return values[1], values[1]
 
     def post(self, group_id):
-        return
+        try:
+            group_id = int(group_id)
+        except ValueError:
+            return 400, 400
+        parser.add_argument('Authorization', location='headers')
+        parser.add_argument('date')
+        parser.add_argument('subject')
+        parser.add_argument('homework')
+        args = parser.parse_args()
+        password = decode_password(args['Authorization'])
+        values = database.add_homework(group_id=group_id, date=args['date'], subject=args['subject'],
+                                       homework=args['homework'], password=password)
+        return values[1], values[1]
 
 
+# noinspection PyMethodMayBeStatic
 class Homework2(Resource):
 
     def delete(self, group_id, homework_id):
-        return
+        try:
+            group_id = int(group_id)
+            homework_id = int(homework_id)
+        except ValueError:
+            return 400, 400
+        parser.add_argument('Authorization', location='headers')
+        args = parser.parse_args()
+        password = decode_password(args['Authorization'])
+        values = database.delete_homework(homework_id=homework_id, group_id=group_id, password=password)
+        return values[1], values[1]
 
     def put(self, group_id, homework_id):
-        return
+        try:
+            group_id = int(group_id)
+            homework_id = int(homework_id)
+        except ValueError:
+            return 400, 400
+        parser.add_argument('Authorization', location='headers')
+        parser.add_argument('date')
+        parser.add_argument('subject')
+        parser.add_argument('homework')
+        args = parser.parse_args()
+        password = decode_password(args['Authorization'])
+        values = database.edit_homework(homework_id=homework_id, group_id=group_id, date=args['date'],
+                                        subject=args['suject'], homework=args['homework'], password=password)
+        return values[1], values[1]
 
 
+# noinspection PyMethodMayBeStatic
 class Exams1(Resource):
 
     def get(self, group_id):
@@ -83,10 +128,11 @@ class Exams1(Resource):
         args = parser.parse_args()
         password = decode_password(args['Authorization'])
         values = database.add_exam(group_id=group_id, date=args['date'], subject=args['subject'], exam=args['exam'],
-                          password=password)
+                                   password=password)
         return values[1], values[1]
 
 
+# noinspection PyMethodMayBeStatic
 class Exams2(Resource):
 
     def delete(self, group_id, exam_id):
@@ -113,10 +159,12 @@ class Exams2(Resource):
         parser.add_argument('exam')
         args = parser.parse_args()
         password = decode_password(args['Authorization'])
-        values = database.edit_exam(exam_id=exam_id, group_id=group_id, date= args['date'], subject=args['suject'], password=password)
+        values = database.edit_exam(exam_id=exam_id, group_id=group_id, date=args['date'], subject=args['suject'],
+                                    exam=args['exam'], password=password)
         return values[1], values[1]
 
 
+# noinspection PyMethodMayBeStatic
 class Groups1(Resource):
 
     def post(self):
@@ -124,12 +172,13 @@ class Groups1(Resource):
         args = parser.parse_args()
         if args['name']:
             group_name = args['name']
-            values = database.create_group(group_name=group_name)
+            values = database.create_group(name=group_name)
             return values[2], values[1]
         else:
             return 400, 400
 
 
+# noinspection PyMethodMayBeStatic
 class Groups2(Resource):
 
     def get(self, group_id):
