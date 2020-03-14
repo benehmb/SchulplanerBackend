@@ -170,7 +170,7 @@ class Exams2(Resource):
         password = decode_password(args['Authorization'])
         if args['date'] and args['subject'] and args['exam']:
             values = database.edit_exam(exam_id=exam_id, group_id=group_id, date=args['date'], subject=args['subject'],
-                                    exam=args['exam'], password=password)
+                                        exam=args['exam'], password=password)
             return values[1], values[1]
         else:
             return 400, 400
