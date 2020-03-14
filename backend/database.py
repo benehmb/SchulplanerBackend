@@ -1,3 +1,5 @@
+import json
+
 import mysql.connector
 import random
 import string
@@ -109,7 +111,7 @@ class Database:
 
     def create_group(self, name):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
 
         sql = "INSERT INTO groups (name, pass) VALUES (%s, %s)"
         password = create_pass()
@@ -121,19 +123,19 @@ class Database:
 
     def get_group_name(self, group_id):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
         sql = "SELECT name FROM groups WHERE id=%s"
         val = group_id,
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult:
-            return True, 200, myresult[0][0]
+            return True, 200, myresult[0]
         else:
             return False, 404
 
     def change_group_pass(self, group_id, old_password):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM deleted_groups WHERE id=%s"
         val = group_id,
@@ -165,7 +167,7 @@ class Database:
 
     def change_group_name(self, group_id, name, password):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM deleted_groups WHERE id=%s"
         val = group_id,
@@ -196,7 +198,7 @@ class Database:
 
     def delete_group(self, group_id, password):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM deleted_groups WHERE id=%s"
         val = group_id,
@@ -259,7 +261,7 @@ class Database:
     # ----------------------------------------------------Homework----------------------------------------------------#
     def get_homework(self, group_id):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
         val = group_id,
@@ -279,7 +281,7 @@ class Database:
 
     def add_homework(self, group_id, date, subject, homework, password):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
         sql = "SELECT * FROM groups WHERE id=%s"
         val = group_id,
         mycursor.execute(sql, val)
@@ -302,7 +304,7 @@ class Database:
 
     def delete_homework(self, homework_id, group_id, password):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
         val = group_id,
@@ -345,7 +347,7 @@ class Database:
 
     def edit_homework(self, homework_id, group_id, date, subject, homework, password):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
         val = group_id,
@@ -393,7 +395,7 @@ class Database:
 
     def get_exams(self, group_id):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
         val = group_id,
@@ -413,7 +415,7 @@ class Database:
 
     def add_exam(self, group_id, date, subject, exam, password):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
         val = group_id,
@@ -437,7 +439,7 @@ class Database:
 
     def delete_exam(self, exam_id, group_id, password):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
         val = group_id,
@@ -480,7 +482,7 @@ class Database:
 
     def edit_exam(self, exam_id, group_id, date, subject, exam, password):
         mydb = self.connect()
-        mycursor = mydb.cursor()
+        mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
         val = group_id,
@@ -551,7 +553,7 @@ def test():
 
     print("Get name:")
     temp_obj = database.get_group_name(test_group[2]['group_id'])
-    if temp_obj[2] == default_test_group_name:
+    if temp_obj[2]['name'] == default_test_group_name:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
     else:
@@ -716,9 +718,8 @@ def test():
         failed += 1
     print("Getting all testExam for group:")
     temp_obj = database.get_exams(groupID)
-    if temp_obj[1] == 200 and temp_obj[2][0][1] == groupID and temp_obj[2][0][2] == 1583770158 and temp_obj[2][0][
-        3] == "Math" \
-            and temp_obj[2][0][4] == "Test":
+    if temp_obj[1] == 200 and temp_obj[2][0]['group_id'] == groupID and temp_obj[2][0]['date'] == 1583770158 and \
+        temp_obj[2][0]['subject'] == "Math" and temp_obj[2][0]['exam'] == "Test":
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
     else:
@@ -727,7 +728,7 @@ def test():
 
     testExam = temp_obj[2][0]
     print("Edit testExam for wrong group:")
-    temp_obj = database.edit_exam(testExam[0], groupID + 1, 1583770159, "English", "Test02", groupPass)
+    temp_obj = database.edit_exam(testExam['id'], groupID + 1, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -735,7 +736,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Edit wrong testExam:")
-    temp_obj = database.edit_exam(testExam[0] + 1, groupID, 1583770159, "English", "Test02", groupPass)
+    temp_obj = database.edit_exam(testExam['id'] + 1, groupID, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -743,7 +744,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Edit testExam for wrong pass:")
-    temp_obj = database.edit_exam(testExam[0], groupID, 1583770159, "English", "Test02", groupPass + "1")
+    temp_obj = database.edit_exam(testExam['id'], groupID, 1583770159, "English", "Test02", groupPass + "1")
     if temp_obj[1] == 401:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -751,7 +752,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Edit testExam:")
-    temp_obj = database.edit_exam(testExam[0], groupID, 1583770159, "English", "Test02", groupPass)
+    temp_obj = database.edit_exam(testExam['id'], groupID, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 200:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -760,7 +761,7 @@ def test():
         failed += 1
 
     print("Delete testExam for wrong group:")
-    temp_obj = database.delete_exam(testExam[0], groupID + 1, groupPass)
+    temp_obj = database.delete_exam(testExam['id'], groupID + 1, groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -768,7 +769,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Delete wrong testExam:")
-    temp_obj = database.delete_exam(testExam[0] + 1, groupID, groupPass)
+    temp_obj = database.delete_exam(testExam['id'] + 1, groupID, groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -776,7 +777,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Delete testExam for wrong pass:")
-    temp_obj = database.delete_exam(testExam[0], groupID, groupPass + "1")
+    temp_obj = database.delete_exam(testExam['id'], groupID, groupPass + "1")
     if temp_obj[1] == 401:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -784,7 +785,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Delete testExam:")
-    temp_obj = database.delete_exam(testExam[0], groupID, groupPass)
+    temp_obj = database.delete_exam(testExam['id'], groupID, groupPass)
     if temp_obj[1] == 204:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -792,7 +793,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Delete testExam again:")
-    temp_obj = database.delete_exam(testExam[0], groupID, groupPass)
+    temp_obj = database.delete_exam(testExam['id'], groupID, groupPass)
     if temp_obj[1] == 410:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -800,7 +801,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Edit testExam after deleted:")
-    temp_obj = database.edit_exam(testExam[0], groupID, 1583770159, "English", "Test02", groupPass)
+    temp_obj = database.edit_exam(testExam['id'], groupID, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 410:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -858,9 +859,8 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
     print("Getting all testHomework for group:")
     temp_obj = database.get_homework(groupID)
-    if temp_obj[1] == 200 and temp_obj[2][0][1] == groupID and temp_obj[2][0][2] == 1583770158 and temp_obj[2][0][
-        3] == "Math" \
-            and temp_obj[2][0][4] == "Test":
+    if temp_obj[1] == 200 and temp_obj[2][0]['group_id'] == groupID and temp_obj[2][0]['date'] == 1583770158 and \
+            temp_obj[2][0]['subject'] == "Math" and temp_obj[2][0]['homework'] == "Test":
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
     else:
@@ -869,7 +869,7 @@ def test():
 
     testHomework = temp_obj[2][0]
     print("Edit testHomework for wrong group:")
-    temp_obj = database.edit_homework(testHomework[0], groupID + 1, 1583770159, "English", "Test02", groupPass)
+    temp_obj = database.edit_homework(testHomework['id'], groupID + 1, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -877,7 +877,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Edit wrong testHomework:")
-    temp_obj = database.edit_homework(testHomework[0] + 1, groupID, 1583770159, "English", "Test02", groupPass)
+    temp_obj = database.edit_homework(testHomework['id'] + 1, groupID, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -885,7 +885,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Edit testHomework for wrong pass:")
-    temp_obj = database.edit_homework(testHomework[0], groupID, 1583770159, "English", "Test02", groupPass + "1")
+    temp_obj = database.edit_homework(testHomework['id'], groupID, 1583770159, "English", "Test02", groupPass + "1")
     if temp_obj[1] == 401:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -893,7 +893,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Edit testHomework:")
-    temp_obj = database.edit_homework(testHomework[0], groupID, 1583770159, "English", "Test02", groupPass)
+    temp_obj = database.edit_homework(testHomework['id'], groupID, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 200:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -902,7 +902,7 @@ def test():
         failed += 1
 
     print("Delete testHomework for wrong group:")
-    temp_obj = database.delete_homework(testHomework[0], groupID + 1, groupPass)
+    temp_obj = database.delete_homework(testHomework['id'], groupID + 1, groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -910,7 +910,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Delete wrong testHomework:")
-    temp_obj = database.delete_homework(testHomework[0] + 1, groupID, groupPass)
+    temp_obj = database.delete_homework(testHomework['id'] + 1, groupID, groupPass)
     if temp_obj[1] == 404:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -918,7 +918,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Delete testHomework for wrong pass:")
-    temp_obj = database.delete_homework(testHomework[0], groupID, groupPass + "1")
+    temp_obj = database.delete_homework(testHomework['id'], groupID, groupPass + "1")
     if temp_obj[1] == 401:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -926,7 +926,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Delete testHomework:")
-    temp_obj = database.delete_homework(testHomework[0], groupID, groupPass)
+    temp_obj = database.delete_homework(testHomework['id'], groupID, groupPass)
     if temp_obj[1] == 204:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -934,7 +934,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Delete testHomework again:")
-    temp_obj = database.delete_homework(testHomework[0], groupID, groupPass)
+    temp_obj = database.delete_homework(testHomework['id'], groupID, groupPass)
     if temp_obj[1] == 410:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -942,7 +942,7 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
     print("Edit testHomework after deleted:")
-    temp_obj = database.edit_homework(testHomework[0], groupID, 1583770159, "English", "Test02", groupPass)
+    temp_obj = database.edit_homework(testHomework['id'], groupID, 1583770159, "English", "Test02", groupPass)
     if temp_obj[1] == 410:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -958,4 +958,4 @@ def test():
         "Successrate:", "{0}%".format((success / (success + failed) * 100)))
 
 
-# test()
+test()
