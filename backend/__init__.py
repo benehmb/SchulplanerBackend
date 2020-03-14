@@ -238,9 +238,9 @@ class Groups2(Resource):
 ##
 # Actually setup the Api resource routing here
 ##
-api.add_resource(Homework1, '/groups/<group_id>/homework')
-api.add_resource(Homework2, '/groups/<group_id>/homework/<homework_id>')
-api.add_resource(Exams1, '/groups/<group_id>/exams')
-api.add_resource(Exams2, '/groups/<group_id>/exams/<exam_id>')
-api.add_resource(Groups1, '/groups')
-api.add_resource(Groups2, '/groups/<group_id>')
+api.add_resource(Homework1, '/groups/<group_id>/homework', '/groups/<group_id>/homework/')
+api.add_resource(Homework2, '/groups/<group_id>/homework/<homework_id>', '/groups/<group_id>/homework/<homework_id>/')
+api.add_resource(Exams1, '/groups/<group_id>/exams', '/groups/<group_id>/exams/')
+api.add_resource(Exams2, '/groups/<group_id>/exams/<exam_id>', '/groups/<group_id>/exams/<exam_id>/')
+api.add_resource(Groups1, '/groups', '/groups/')
+api.add_resource(Groups2, '/groups/<group_id>', '/groups/<group_id>/')
