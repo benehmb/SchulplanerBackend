@@ -2,7 +2,7 @@ import markdown
 import os
 
 # Import the framework
-from flask import Flask, jsonify
+from flask import Flask
 from flask_restful import Resource, Api, reqparse
 from .database import *
 from base64 import b64decode
@@ -32,7 +32,7 @@ def index():
     """Present some documentation"""
 
     # Open the README file
-    with open(os.path.dirname(app.root_path) + '/README.md', 'r') as markdown_file:
+    with open(os.path.dirname(app.root_path) + '/README.md') as markdown_file:
         # Read the content of the file
         content = markdown_file.read()
 
@@ -65,9 +65,12 @@ class Homework1(Resource):
         parser.add_argument('homework')
         args = parser.parse_args()
         password = decode_password(args['Authorization'])
-        values = database.add_homework(group_id=group_id, date=args['date'], subject=args['subject'],
-                                       homework=args['homework'], password=password)
-        return values[1], values[1]
+        if args['date'] and args['subject'] and args['homework']:
+            values = database.add_homework(group_id=group_id, date=args['date'], subject=args['subject'],
+                                           homework=args['homework'], password=password)
+            return values[1], values[1]
+        else:
+            return 400, 400
 
 
 # noinspection PyMethodMayBeStatic
@@ -97,9 +100,12 @@ class Homework2(Resource):
         parser.add_argument('homework')
         args = parser.parse_args()
         password = decode_password(args['Authorization'])
-        values = database.edit_homework(homework_id=homework_id, group_id=group_id, date=args['date'],
-                                        subject=args['suject'], homework=args['homework'], password=password)
-        return values[1], values[1]
+        if args['date'] and args['subject'] and args['homework']:
+            values = database.edit_homework(homework_id=homework_id, group_id=group_id, date=args['date'],
+                                            subject=args['subject'], homework=args['homework'], password=password)
+            return values[1], values[1]
+        else:
+            return 400, 400
 
 
 # noinspection PyMethodMayBeStatic
@@ -127,9 +133,12 @@ class Exams1(Resource):
         parser.add_argument('exam')
         args = parser.parse_args()
         password = decode_password(args['Authorization'])
-        values = database.add_exam(group_id=group_id, date=args['date'], subject=args['subject'], exam=args['exam'],
-                                   password=password)
-        return values[1], values[1]
+        if args['date'] and args['subject'] and args['exam']:
+            values = database.add_exam(group_id=group_id, date=args['date'], subject=args['subject'], exam=args['exam'],
+                                       password=password)
+            return values[1], values[1]
+        else:
+            return 400, 400
 
 
 # noinspection PyMethodMayBeStatic
@@ -159,9 +168,12 @@ class Exams2(Resource):
         parser.add_argument('exam')
         args = parser.parse_args()
         password = decode_password(args['Authorization'])
-        values = database.edit_exam(exam_id=exam_id, group_id=group_id, date=args['date'], subject=args['suject'],
+        if args['date'] and args['subject'] and args['exam']:
+            values = database.edit_exam(exam_id=exam_id, group_id=group_id, date=args['date'], subject=args['subject'],
                                     exam=args['exam'], password=password)
-        return values[1], values[1]
+            return values[1], values[1]
+        else:
+            return 400, 400
 
 
 # noinspection PyMethodMayBeStatic

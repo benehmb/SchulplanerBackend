@@ -1,5 +1,3 @@
-import json
-
 import mysql.connector
 import random
 import string
@@ -157,7 +155,7 @@ class Database:
                     val = (password, group_id)
                     mycursor.execute(sql, val)
                     mydb.commit()
-                    return True, 200, password
+                    return True, 200, {"password": password}
                 else:
                     return False, 401
             else:
@@ -215,8 +213,8 @@ class Database:
                 mycursor.execute(sql, val)
                 myresult = mycursor.fetchall()
                 if myresult:
-                    sql = "INSERT INTO deleted_groups (id, name, pass, created_at) SELECT "\
-                        "id, name, pass, created_at FROM groups WHERE id=%s"
+                    sql = "INSERT INTO deleted_groups (id, name, pass, created_at) SELECT " \
+                          "id, name, pass, created_at FROM groups WHERE id=%s"
                     val = group_id,
                     mycursor.execute(sql, val)
                     mydb.commit()
@@ -224,8 +222,8 @@ class Database:
                     val = group_id,
                     mycursor.execute(sql, val)
                     mydb.commit()
-                    sql = "INSERT INTO deleted_homework (id, group_id, date, subject, homework) SELECT "\
-                        "id, group_id, date, subject, homework FROM homework WHERE group_id=%s"
+                    sql = "INSERT INTO deleted_homework (id, group_id, date, subject, homework) SELECT " \
+                          "id, group_id, date, subject, homework FROM homework WHERE group_id=%s"
                     val = group_id,
                     mycursor.execute(sql, val)
                     mydb.commit()
@@ -233,8 +231,8 @@ class Database:
                     val = group_id,
                     mycursor.execute(sql, val)
                     mydb.commit()
-                    sql = "INSERT INTO deleted_exams (id, group_id, date, subject, exam) SELECT id, group_id, date, "\
-                        "subject, exam FROM exams WHERE group_id=%s"
+                    sql = "INSERT INTO deleted_exams (id, group_id, date, subject, exam) SELECT id, group_id, date, " \
+                          "subject, exam FROM exams WHERE group_id=%s"
                     val = group_id,
                     mycursor.execute(sql, val)
                     mydb.commit()
@@ -273,7 +271,7 @@ class Database:
             mycursor.execute(sql, val)
             result = mycursor.fetchall()
             if result.__len__() > 0:
-                return True, 200, result
+                return True, 200, result[0]
             else:
                 return False, 204
         else:
@@ -326,8 +324,8 @@ class Database:
                     mycursor.execute(sql, val)
                     myresult = mycursor.fetchall()
                     if myresult:
-                        sql = "INSERT INTO deleted_homework (id, group_id, date, subject, homework) SELECT "\
-                            "id, group_id, date, subject, homework FROM homework WHERE id=%s"
+                        sql = "INSERT INTO deleted_homework (id, group_id, date, subject, homework) SELECT " \
+                              "id, group_id, date, subject, homework FROM homework WHERE id=%s"
                         val = homework_id,
                         mycursor.execute(sql, val)
                         mydb.commit()
@@ -407,7 +405,7 @@ class Database:
             mycursor.execute(sql, val)
             result = mycursor.fetchall()
             if result.__len__() > 0:
-                return True, 200, result
+                return True, 200, result[0]
             else:
                 return False, 204
         else:
@@ -719,7 +717,7 @@ def test():
     print("Getting all testExam for group:")
     temp_obj = database.get_exams(groupID)
     if temp_obj[1] == 200 and temp_obj[2][0]['group_id'] == groupID and temp_obj[2][0]['date'] == 1583770158 and \
-        temp_obj[2][0]['subject'] == "Math" and temp_obj[2][0]['exam'] == "Test":
+            temp_obj[2][0]['subject'] == "Math" and temp_obj[2][0]['exam'] == "Test":
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
     else:
@@ -958,4 +956,4 @@ def test():
         "Successrate:", "{0}%".format((success / (success + failed) * 100)))
 
 
-test()
+# test()
