@@ -163,6 +163,33 @@ class Database:
         else:
             return False, 410
 
+    def check_group_pass(self, group_id, password):
+        mydb = self.connect()
+        mycursor = mydb.cursor(dictionary=True)
+
+        sql = "SELECT * FROM deleted_groups WHERE id=%s"
+        val = group_id,
+        mycursor.execute(sql, val)
+        myresult = mycursor.fetchall()
+        if myresult.__len__() == 0:
+            sql = "SELECT * FROM groups WHERE id=%s"
+            val = group_id,
+            mycursor.execute(sql, val)
+            myresult = mycursor.fetchall()
+            if myresult:
+                sql = "SELECT * FROM groups WHERE id=%s AND pass=%s"
+                val = (group_id, password)
+                mycursor.execute(sql, val)
+                myresult = mycursor.fetchall()
+                if myresult:
+                    return True, 200
+                else:
+                    return False, 401
+            else:
+                return False, 404
+        else:
+            return False, 410
+
     def change_group_name(self, group_id, name, password):
         mydb = self.connect()
         mycursor = mydb.cursor(dictionary=True)
@@ -271,7 +298,7 @@ class Database:
             mycursor.execute(sql, val)
             result = mycursor.fetchall()
             if result.__len__() > 0:
-                return True, 200, result[0]
+                return True, 200, result
             else:
                 return False, 204
         else:
@@ -405,7 +432,7 @@ class Database:
             mycursor.execute(sql, val)
             result = mycursor.fetchall()
             if result.__len__() > 0:
-                return True, 200, result[0]
+                return True, 200, result
             else:
                 return False, 204
         else:
@@ -568,7 +595,7 @@ def test():
 
     print("Change pass: ")
     temp_obj = database.change_group_pass(test_group[2]['group_id'], test_group[2]['password'])
-    newPass = temp_obj[2]
+    newPass = temp_obj[2]['password']
     if temp_obj[1] == 200:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1
@@ -617,6 +644,31 @@ def test():
         print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
         failed += 1
 
+    print("Check if Password is correct for wrong group: ")
+    temp_obj = database.check_group_pass(test_group[2]['group_id']+1, test_group[2]['password'])
+    if temp_obj[1] == 404:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success += 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed += 1
+    print("Check if Password is correct with wrong password: ")
+    temp_obj = database.check_group_pass(test_group[2]['group_id'], test_group[2]['password'] + "1")
+    if temp_obj[1] == 401:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success += 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed += 1
+    print("Check if Password is correct: ")
+    temp_obj = database.check_group_pass(test_group[2]['group_id'], newPass)
+    if temp_obj[1] == 200:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success += 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed += 1
+
     print("Delete wrong group: ")
     temp_obj = database.delete_group(test_group[2]['group_id'] + 1, test_group[2]['password'])
     if temp_obj[1] == 404:
@@ -651,6 +703,14 @@ def test():
         failed += 1
     print("Change pass after deleted: ")
     temp_obj = database.change_group_pass(test_group[2]['group_id'], test_group[2]['password'])
+    if temp_obj[1] == 410:
+        print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
+        success += 1
+    else:
+        print(BColors.FAIL + "Failed" + BColors.ENDC, temp_obj)
+        failed += 1
+    print("Check if Password is correct for deleted group: ")
+    temp_obj = database.check_group_pass(test_group[2]['group_id'], test_group[2]['password'])
     if temp_obj[1] == 410:
         print(BColors.OKGREEN + "Success" + BColors.ENDC, temp_obj)
         success += 1

@@ -118,6 +118,8 @@
   - 200 -> Ok
   - 400 -> Bad request (Group_id is String or Something else)
   - 404 -> Group not found
+  Additional: If Password is in get, returns 200 or 401 to check if Password is correct
+  - 401 -> Unauthorized: wrong password
 
 ### POST /groups
 
@@ -161,6 +163,7 @@
   - ```change_group_pass(group_id, old_password):{boolean(worled), integer(statuscode), string(Password; only returned if worked=true)}```
   - ```delete_group(group_id, password):{boolean(worked), integer(statuscode)}```
   - ```change_group_name(group_id, name, password):{boolean(worked), integer(statuscode)}```
+  - ```check_group_pass(group_id, password):{boolean(worked), integer(statuscode)}```
 
 ### Homework
 
