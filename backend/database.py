@@ -9,9 +9,9 @@ def create_pass():
 
 
 class Database:
-    host = "localhost"
-    user = "root"
-    passwd = ""
+    host = "db"
+    user = "schulplaner"
+    passwd = "secret"
     database = "schulplaner"
 
     # ----------------------------------------------------Initiate----------------------------------------------------#

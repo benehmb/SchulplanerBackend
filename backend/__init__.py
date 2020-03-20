@@ -6,7 +6,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_restful import Resource, Api, reqparse
 from .database import *
-from base64 import b64decode
+from pybase64 import b64decode
 
 # Create an instance of Flask
 app = Flask(__name__)

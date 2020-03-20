@@ -1,5 +1,7 @@
-#mysql
-flask
+mysql.connector
 markdown
+flask
 flask_restful
 flask_httpauth
+flask_cors
+pybase64
