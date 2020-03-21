@@ -122,7 +122,7 @@ class Database:
     def get_group_name(self, group_id):
         mydb = self.connect()
         mycursor = mydb.cursor(dictionary=True)
-        sql = "SELECT name FROM groups WHERE id=%s"
+        sql = "SELECT name, id FROM groups WHERE id=%s"
         val = group_id,
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
