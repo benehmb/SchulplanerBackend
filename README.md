@@ -4,7 +4,7 @@
 
 ```JSON:
 {
-    "groupId": int,     (over path)
+    "group_id": int,     (over path)
     "id": int,          (Oprional for PUT, over path)
     "date": int,
     "subject": String,
@@ -55,7 +55,7 @@
 
 ```JSON:
 {
-    "groupId": int,     (over path)
+    "group_id": int,     (over path)
     "id": int,          (Oprional for PUT, over path)
     "date": int,
     "subject": String,

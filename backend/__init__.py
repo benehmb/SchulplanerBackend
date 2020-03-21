@@ -10,7 +10,9 @@ from pybase64 import b64decode
 
 # Create an instance of Flask
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"*": {"origins": "*"}}, allow_headers=[
+    "Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
+    supports_credentials=True)
 
 # Create the API
 api = Api(app)
