@@ -202,13 +202,16 @@ class Groups2(Resource):
             group_id = int(group_id)
         except ValueError:
             return 400, 400
-        values = database.get_group_name(group_id=group_id)
         parser.add_argument('Authorization', location='headers')
-
-        if values[0]:
-            return values[2], values[1]
+        args = parser.parse_args()
+        if args['Authorization']:
+            values = database.check_group_pass(group_id=group_id, password=decode_password(args['Authorization']))
         else:
-            return values[1], values[1]
+            values = database.get_group_name(group_id=group_id)
+            if values[0]:
+                return values[2], values[1]
+            else:
+                return values[1], values[1]
 
     def delete(self, group_id):
         parser.add_argument('Authorization', location='headers')
@@ -219,11 +222,10 @@ class Groups2(Resource):
         except ValueError:
             return 400, 400
         if args['Authorization']:
-            values = database.check_group_pass(group_id=group_id, password=decode_password(args['Authorization']))
-            return values[1], values[1]
-        else:
             values = database.delete_group(group_id=group_id, password=password)
             return values[1], values[1]
+        else:
+            return 400, 400
 
     def put(self, group_id):
         parser.add_argument('name')
