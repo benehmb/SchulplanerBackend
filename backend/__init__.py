@@ -206,6 +206,7 @@ class Groups2(Resource):
         args = parser.parse_args()
         if args['Authorization']:
             values = database.check_group_pass(group_id=group_id, password=decode_password(args['Authorization']))
+            return values[1], values[1]
         else:
             values = database.get_group_name(group_id=group_id)
             if values[0]:
