@@ -313,7 +313,7 @@ class Database:
             val = group_id,
             mycursor.execute(sql, val)
             result = mycursor.fetchall()
-            yesterdayTimestamp = calendar.timegm((datetime.date.today() - datetime.timedelta(hours=24)).timetuple()) + 79800
+            yesterdayTimestamp = calendar.timegm((datetime.date.today() - datetime.timedelta(hours=24)).timetuple()) + 79200
             for i in range(0, result.__len__()):
                 if result[i]['date'] < yesterdayTimestamp:
                     self.override_delete_homework(result[i]['id'])
@@ -464,7 +464,7 @@ class Database:
             val = group_id,
             mycursor.execute(sql, val)
             result = mycursor.fetchall()
-            yesterdayTimestamp = calendar.timegm((datetime.date.today() - datetime.timedelta(hours=24)).timetuple()) + 79800
+            yesterdayTimestamp = calendar.timegm((datetime.date.today() - datetime.timedelta(hours=24)).timetuple()) + 79200
             for i in range(0, result.__len__()):
                 if result[i]['date'] < yesterdayTimestamp:
                     self.override_delete_exam(result[i]['id'])
