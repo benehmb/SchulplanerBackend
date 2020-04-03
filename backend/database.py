@@ -313,11 +313,17 @@ class Database:
             val = group_id,
             mycursor.execute(sql, val)
             result = mycursor.fetchall()
-            yesterdayTimestamp = calendar.timegm((datetime.date.today() - datetime.timedelta(hours=24)).timetuple()) + 79200
-            for i in range(0, result.__len__()):
-                if result[i]['date'] < yesterdayTimestamp:
-                    self.override_delete_homework(result[i]['id'])
-                    del result[i]
+            yesterdayTimestamp = calendar.timegm(
+                (datetime.date.today() - datetime.timedelta(hours=24)).timetuple()) + 79200
+            deleted = True
+            while deleted:
+                deleted = False
+                for i in range(0, result.__len__()):
+                    if result[i]['date'] < yesterdayTimestamp:
+                        self.override_delete_homework(result[i]['id'])
+                        del result[i]
+                        deleted = True
+                        break
             if result.__len__() > 0:
                 return True, 200, result
             else:
@@ -464,11 +470,17 @@ class Database:
             val = group_id,
             mycursor.execute(sql, val)
             result = mycursor.fetchall()
-            yesterdayTimestamp = calendar.timegm((datetime.date.today() - datetime.timedelta(hours=24)).timetuple()) + 79200
-            for i in range(0, result.__len__()):
-                if result[i]['date'] < yesterdayTimestamp:
-                    self.override_delete_exam(result[i]['id'])
-                    del result[i]
+            yesterdayTimestamp = calendar.timegm(
+                (datetime.date.today() - datetime.timedelta(hours=24)).timetuple()) + 79200
+            deleted = True
+            while deleted:
+                deleted = False
+                for i in range(0, result.__len__()):
+                    if result[i]['date'] < yesterdayTimestamp:
+                        self.override_delete_exam(result[i]['id'])
+                        del result[i]
+                        deleted = True
+                        break
             if result.__len__() > 0:
                 return True, 200, result
             else:
