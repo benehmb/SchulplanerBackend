@@ -116,7 +116,7 @@ class Database:
 
         sql = "INSERT INTO groups (name, pass) VALUES (%s, %s)"
         password = create_pass()
-        val = (name, password)
+        val = (name, password,)
         mycursor.execute(sql, val)
         mydb.commit()
         group_id = mycursor.lastrowid
@@ -126,7 +126,7 @@ class Database:
         mydb = self.connect()
         mycursor = mydb.cursor(dictionary=True)
         sql = "SELECT name, id FROM groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult:
@@ -139,23 +139,23 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM deleted_groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult.__len__() == 0:
             sql = "SELECT * FROM groups WHERE id=%s"
-            val = group_id,
+            val = (group_id,)
             mycursor.execute(sql, val)
             myresult = mycursor.fetchall()
             if myresult:
                 sql = "SELECT * FROM groups WHERE id=%s AND pass=%s"
-                val = (group_id, old_password)
+                val = (group_id, old_password,)
                 mycursor.execute(sql, val)
                 myresult = mycursor.fetchall()
                 if myresult:
                     sql = "UPDATE groups SET pass=%s WHERE id=%s"
                     password = create_pass()
-                    val = (password, group_id)
+                    val = (password, group_id,)
                     mycursor.execute(sql, val)
                     mydb.commit()
                     return True, 200, {"password": password}
@@ -171,17 +171,17 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM deleted_groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult.__len__() == 0:
             sql = "SELECT * FROM groups WHERE id=%s"
-            val = group_id,
+            val = (group_id,)
             mycursor.execute(sql, val)
             myresult = mycursor.fetchall()
             if myresult:
                 sql = "SELECT * FROM groups WHERE id=%s AND pass=%s"
-                val = (group_id, password)
+                val = (group_id, password,)
                 mycursor.execute(sql, val)
                 myresult = mycursor.fetchall()
                 if myresult:
@@ -198,22 +198,22 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM deleted_groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult.__len__() == 0:
             sql = "SELECT * FROM groups WHERE id=%s"
-            val = group_id,
+            val = (group_id,)
             mycursor.execute(sql, val)
             myresult = mycursor.fetchall()
             if myresult:
                 sql = "SELECT * FROM groups WHERE id=%s AND pass=%s"
-                val = (group_id, password)
+                val = (group_id, password,)
                 mycursor.execute(sql, val)
                 myresult = mycursor.fetchall()
                 if myresult:
                     sql = "UPDATE groups SET name = %s WHERE id=%s"
-                    val = (name, group_id)
+                    val = (name, group_id,)
                     mycursor.execute(sql, val)
                     mydb.commit()
                     return True, 200
@@ -229,45 +229,45 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM deleted_groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult.__len__() == 0:
             sql = "SELECT * FROM groups WHERE id=%s"
-            val = group_id,
+            val = (group_id,)
             mycursor.execute(sql, val)
             myresult = mycursor.fetchall()
             if myresult:
                 sql = "SELECT * FROM groups WHERE id=%s AND pass=%s"
-                val = (group_id, password)
+                val = (group_id, password,)
                 mycursor.execute(sql, val)
                 myresult = mycursor.fetchall()
                 if myresult:
                     sql = "INSERT INTO deleted_groups (id, name, pass, created_at) SELECT " \
                           "id, name, pass, created_at FROM groups WHERE id=%s"
-                    val = group_id,
+                    val = (group_id,)
                     mycursor.execute(sql, val)
                     mydb.commit()
                     sql = "DELETE FROM groups WHERE id=%s"
-                    val = group_id,
+                    val = (group_id,)
                     mycursor.execute(sql, val)
                     mydb.commit()
                     sql = "INSERT INTO deleted_homework (id, group_id, date, subject, homework) SELECT " \
                           "id, group_id, date, subject, homework FROM homework WHERE group_id=%s"
-                    val = group_id,
+                    val = (group_id,)
                     mycursor.execute(sql, val)
                     mydb.commit()
                     sql = "DELETE FROM homework WHERE group_id=%s"
-                    val = group_id,
+                    val = (group_id,)
                     mycursor.execute(sql, val)
                     mydb.commit()
                     sql = "INSERT INTO deleted_exams (id, group_id, date, subject, exam) SELECT id, group_id, date, " \
                           "subject, exam FROM exams WHERE group_id=%s"
-                    val = group_id,
+                    val = (group_id,)
                     mycursor.execute(sql, val)
                     mydb.commit()
                     sql = "DELETE FROM exams WHERE group_id=%s"
-                    val = group_id,
+                    val = (group_id,)
                     mycursor.execute(sql, val)
                     mydb.commit()
                     return True, 204
@@ -292,11 +292,11 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
         sql = "INSERT INTO deleted_homework (id, group_id, date, subject, homework) SELECT " \
               "id, group_id, date, subject, homework FROM homework WHERE id=%s"
-        val = homework_id,
+        val = (homework_id,)
         mycursor.execute(sql, val)
         mydb.commit()
         sql = "DELETE FROM homework WHERE id=%s"
-        val = homework_id,
+        val = (homework_id,)
         mycursor.execute(sql, val)
         mydb.commit()
 
@@ -305,12 +305,12 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult:
             sql = "SELECT * FROM homework WHERE group_id=%s"
-            val = group_id,
+            val = (group_id,)
             mycursor.execute(sql, val)
             result = mycursor.fetchall()
             yesterdayTimestamp = calendar.timegm(
@@ -335,17 +335,17 @@ class Database:
         mydb = self.connect()
         mycursor = mydb.cursor(dictionary=True)
         sql = "SELECT * FROM groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult:
             sql = "SELECT * FROM groups WHERE id=%s AND pass=%s"
-            val = (group_id, password)
+            val = (group_id, password,)
             mycursor.execute(sql, val)
             myresult = mycursor.fetchall()
             if myresult:
                 sql = "INSERT INTO homework (group_id, date, subject, homework) VALUES (%s, %s, %s, %s)"
-                val = (group_id, date, subject, homework)
+                val = (group_id, date, subject, homework,)
                 mycursor.execute(sql, val)
                 mydb.commit()
                 return True, 201
@@ -359,32 +359,32 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult:
             sql = "SELECT * FROM groups WHERE id=%s AND pass=%s"
-            val = (group_id, password)
+            val = (group_id, password,)
             mycursor.execute(sql, val)
             myresult = mycursor.fetchall()
             if myresult:
                 sql = "SELECT * FROM deleted_homework WHERE id=%s AND group_id=%s"
-                val = (homework_id, group_id)
+                val = (homework_id, group_id,)
                 mycursor.execute(sql, val)
                 myresult = mycursor.fetchall()
                 if myresult.__len__() == 0:
                     sql = "SELECT * FROM homework WHERE id=%s"
-                    val = homework_id,
+                    val = (homework_id,)
                     mycursor.execute(sql, val)
                     myresult = mycursor.fetchall()
                     if myresult:
                         sql = "INSERT INTO deleted_homework (id, group_id, date, subject, homework) SELECT " \
                               "id, group_id, date, subject, homework FROM homework WHERE id=%s"
-                        val = homework_id,
+                        val = (homework_id,)
                         mycursor.execute(sql, val)
                         mydb.commit()
                         sql = "DELETE FROM homework WHERE id=%s"
-                        val = homework_id,
+                        val = (homework_id,)
                         mycursor.execute(sql, val)
                         mydb.commit()
                         return True, 204
@@ -402,27 +402,27 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult:
             sql = "SELECT * FROM deleted_homework WHERE id=%s AND group_id=%s"
-            val = (homework_id, group_id)
+            val = (homework_id, group_id,)
             mycursor.execute(sql, val)
             myresult = mycursor.fetchall()
             if myresult.__len__() == 0:
                 sql = "SELECT * FROM groups WHERE id=%s AND pass=%s"
-                val = (group_id, password)
+                val = (group_id, password,)
                 mycursor.execute(sql, val)
                 myresult = mycursor.fetchall()
                 if myresult:
                     sql = "SELECT * FROM homework WHERE id=%s"
-                    val = homework_id,
+                    val = (homework_id,)
                     mycursor.execute(sql, val)
                     myresult = mycursor.fetchall()
                     if myresult:
                         sql = "UPDATE homework SET group_id = %s, date = %s, subject = %s, homework = %s WHERE id=%s"
-                        val = (group_id, date, subject, homework, homework_id)
+                        val = (group_id, date, subject, homework, homework_id,)
                         mycursor.execute(sql, val)
                         mydb.commit()
                         return True, 200
@@ -449,11 +449,11 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
         sql = "INSERT INTO deleted_exams (id, group_id, date, subject, exam) SELECT " \
               "id, group_id, date, subject, exam FROM exams WHERE id=%s"
-        val = exam_id,
+        val = (exam_id,)
         mycursor.execute(sql, val)
         mydb.commit()
         sql = "DELETE FROM exams WHERE id=%s"
-        val = exam_id,
+        val = (exam_id,)
         mycursor.execute(sql, val)
         mydb.commit()
 
@@ -462,12 +462,12 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult:
             sql = "SELECT * FROM exams WHERE group_id=%s"
-            val = group_id,
+            val = (group_id,)
             mycursor.execute(sql, val)
             result = mycursor.fetchall()
             yesterdayTimestamp = calendar.timegm(
@@ -493,17 +493,17 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult:
             sql = "SELECT * FROM groups WHERE id=%s AND pass=%s"
-            val = (group_id, password)
+            val = (group_id, password,)
             mycursor.execute(sql, val)
             myresult = mycursor.fetchall()
             if myresult:
                 sql = "INSERT INTO exams (group_id, date, subject, exam) VALUES (%s, %s, %s, %s)"
-                val = (group_id, date, subject, exam)
+                val = (group_id, date, subject, exam,)
                 mycursor.execute(sql, val)
                 mydb.commit()
                 return True, 201
@@ -517,32 +517,32 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult:
             sql = "SELECT * FROM groups WHERE id=%s AND pass=%s"
-            val = (group_id, password)
+            val = (group_id, password,)
             mycursor.execute(sql, val)
             myresult = mycursor.fetchall()
             if myresult:
                 sql = "SELECT * FROM deleted_exams WHERE id=%s AND group_id=%s"
-                val = (exam_id, group_id)
+                val = (exam_id, group_id,)
                 mycursor.execute(sql, val)
                 myresult = mycursor.fetchall()
                 if myresult.__len__() == 0:
                     sql = "SELECT * FROM exams WHERE id=%s"
-                    val = exam_id,
+                    val = (exam_id,)
                     mycursor.execute(sql, val)
                     myresult = mycursor.fetchall()
                     if myresult:
                         sql = "INSERT INTO deleted_exams (id, group_id, date, subject, exam) SELECT " \
                               "id, group_id, date, subject, exam FROM exams WHERE id=%s"
-                        val = exam_id,
+                        val = (exam_id,)
                         mycursor.execute(sql, val)
                         mydb.commit()
                         sql = "DELETE FROM exams WHERE id=%s"
-                        val = exam_id,
+                        val = (exam_id,)
                         mycursor.execute(sql, val)
                         mydb.commit()
                         return True, 204
@@ -560,27 +560,27 @@ class Database:
         mycursor = mydb.cursor(dictionary=True)
 
         sql = "SELECT * FROM groups WHERE id=%s"
-        val = group_id,
+        val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
         if myresult:
             sql = "SELECT * FROM deleted_exams WHERE id=%s AND group_id=%s"
-            val = (exam_id, group_id)
+            val = (exam_id, group_id,)
             mycursor.execute(sql, val)
             myresult = mycursor.fetchall()
             if myresult.__len__() == 0:
                 sql = "SELECT * FROM groups WHERE id=%s AND pass=%s"
-                val = (group_id, password)
+                val = (group_id, password,)
                 mycursor.execute(sql, val)
                 myresult = mycursor.fetchall()
                 if myresult:
                     sql = "SELECT * FROM exams WHERE id=%s"
-                    val = exam_id,
+                    val = (exam_id,)
                     mycursor.execute(sql, val)
                     myresult = mycursor.fetchall()
                     if myresult:
                         sql = "UPDATE exams SET group_id = %s, date = %s, subject = %s, exam = %s WHERE id=%s"
-                        val = (group_id, date, subject, exam, exam_id)
+                        val = (group_id, date, subject, exam, exam_id,)
                         mycursor.execute(sql, val)
                         mydb.commit()
                         return True, 200

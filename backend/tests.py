@@ -1,4 +1,4 @@
-from backend.database import *
+from database import *
 
 
 # Testing:
