@@ -47,6 +47,8 @@ class Database:
             found['database'] = True
         if not found['database']:
             mycursor.execute("CREATE DATABASE " + self.database)
+        mydb.close()
+
         mydb = self.connect()
         mycursor = mydb.cursor()
 
@@ -104,6 +106,7 @@ class Database:
                                                    "CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL , "
                                                    "`exam` TEXT CHARACTER SET latin1 COLLATE latin1_german1_ci NOT "
                                                    "NULL) ENGINE = InnoDB;")
+        mydb.close()
         return
 
     # --------------------------------------------------Initiate end--------------------------------------------------#
@@ -117,9 +120,12 @@ class Database:
         sql = "INSERT INTO groups (name, pass) VALUES (%s, %s)"
         password = create_pass()
         val = (name, password,)
+        print("Request: ", sql, val)
         mycursor.execute(sql, val)
+        print("Response:", self.get_group_name(mycursor.lastrowid))
         mydb.commit()
         group_id = mycursor.lastrowid
+        mydb.close()
         return True, 201, {"group_id": group_id, "password": password}
 
     def get_group_name(self, group_id):
@@ -129,6 +135,7 @@ class Database:
         val = (group_id,)
         mycursor.execute(sql, val)
         myresult = mycursor.fetchall()
+        mydb.close()
         if myresult:
             return True, 200, myresult[0]
         else:
@@ -158,12 +165,16 @@ class Database:
                     val = (password, group_id,)
                     mycursor.execute(sql, val)
                     mydb.commit()
+                    mydb.close()
                     return True, 200, {"password": password}
                 else:
+                    mydb.close()
                     return False, 401
             else:
+                mydb.close()
                 return False, 404
         else:
+            mydb.close()
             return False, 410
 
     def check_group_pass(self, group_id, password):
@@ -185,12 +196,16 @@ class Database:
                 mycursor.execute(sql, val)
                 myresult = mycursor.fetchall()
                 if myresult:
+                    mydb.close()
                     return True, 200
                 else:
+                    mydb.close()
                     return False, 401
             else:
+                mydb.close()
                 return False, 404
         else:
+            mydb.close()
             return False, 410
 
     def change_group_name(self, group_id, name, password):
@@ -216,12 +231,16 @@ class Database:
                     val = (name, group_id,)
                     mycursor.execute(sql, val)
                     mydb.commit()
+                    mydb.close()
                     return True, 200
                 else:
+                    mydb.close()
                     return False, 401
             else:
+                mydb.close()
                 return False, 404
         else:
+            mydb.close()
             return False, 410
 
     def delete_group(self, group_id, password):
@@ -270,12 +289,16 @@ class Database:
                     val = (group_id,)
                     mycursor.execute(sql, val)
                     mydb.commit()
+                    mydb.close()
                     return True, 204
                 else:
+                    mydb.close()
                     return False, 401
             else:
+                mydb.close()
                 return False, 404
         else:
+            mydb.close()
             return False, 410
 
     # Methods:
@@ -312,6 +335,7 @@ class Database:
             sql = "SELECT * FROM homework WHERE group_id=%s"
             val = (group_id,)
             mycursor.execute(sql, val)
+            mydb.close()
             result = mycursor.fetchall()
             yesterdayTimestamp = calendar.timegm(
                 (datetime.date.today() - datetime.timedelta(hours=24)).timetuple()) + 79200
@@ -348,10 +372,13 @@ class Database:
                 val = (group_id, date, subject, homework,)
                 mycursor.execute(sql, val)
                 mydb.commit()
+                mydb.close()
                 return True, 201
             else:
+                mydb.close()
                 return False, 401
         else:
+            mydb.close()
             return False, 404
 
     def delete_homework(self, homework_id, group_id, password):
@@ -387,14 +414,19 @@ class Database:
                         val = (homework_id,)
                         mycursor.execute(sql, val)
                         mydb.commit()
+                        mydb.close()
                         return True, 204
                     else:
+                        mydb.close()
                         return False, 404
                 else:
+                    mydb.close()
                     return False, 410
             else:
+                mydb.close()
                 return False, 401
         else:
+            mydb.close()
             return False, 404
 
     def edit_homework(self, homework_id, group_id, date, subject, homework, password):
@@ -425,14 +457,19 @@ class Database:
                         val = (group_id, date, subject, homework, homework_id,)
                         mycursor.execute(sql, val)
                         mydb.commit()
+                        mydb.close()
                         return True, 200
                     else:
+                        mydb.close()
                         return False, 404
                 else:
+                    mydb.close()
                     return False, 401
             else:
+                mydb.close()
                 return False, 410
         else:
+            mydb.close()
             return False, 404
 
     # Methods:
@@ -456,6 +493,7 @@ class Database:
         val = (exam_id,)
         mycursor.execute(sql, val)
         mydb.commit()
+        mydb.close()
 
     def get_exams(self, group_id):
         mydb = self.connect()
@@ -470,6 +508,7 @@ class Database:
             val = (group_id,)
             mycursor.execute(sql, val)
             result = mycursor.fetchall()
+            mydb.close()
             yesterdayTimestamp = calendar.timegm(
                 (datetime.date.today() - datetime.timedelta(hours=24)).timetuple()) + 79200
             deleted = True
@@ -506,10 +545,13 @@ class Database:
                 val = (group_id, date, subject, exam,)
                 mycursor.execute(sql, val)
                 mydb.commit()
+                mydb.close()
                 return True, 201
             else:
+                mydb.close()
                 return False, 401
         else:
+            mydb.close()
             return False, 404
 
     def delete_exam(self, exam_id, group_id, password):
@@ -545,14 +587,19 @@ class Database:
                         val = (exam_id,)
                         mycursor.execute(sql, val)
                         mydb.commit()
+                        mydb.close()
                         return True, 204
                     else:
+                        mydb.close()
                         return False, 404
                 else:
+                    mydb.close()
                     return False, 410
             else:
+                mydb.close()
                 return False, 401
         else:
+            mydb.close()
             return False, 404
 
     def edit_exam(self, exam_id, group_id, date, subject, exam, password):
@@ -583,14 +630,19 @@ class Database:
                         val = (group_id, date, subject, exam, exam_id,)
                         mycursor.execute(sql, val)
                         mydb.commit()
+                        mydb.close()
                         return True, 200
                     else:
+                        mydb.close()
                         return False, 404
                 else:
+                    mydb.close()
                     return False, 401
             else:
+                mydb.close()
                 return False, 410
         else:
+            mydb.close()
             return False, 404
 
     # Methods:
